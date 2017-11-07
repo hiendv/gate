@@ -1,5 +1,5 @@
 # Gate
-[![Build Status](https://travis-ci.org/hiendv/gate.svg?branch=master)](https://travis-ci.org/hiendv/gate) [![GoDoc](https://godoc.org/github.com/hiendv/gate?status.svg)](https://godoc.org/github.com/hiendv/gate) [![Go Report Card](https://goreportcard.com/badge/github.com/hiendv/gate)](https://goreportcard.com/report/github.com/hiendv/gate)
+[![Build Status](https://travis-ci.org/hiendv/gate.svg?branch=master)](https://travis-ci.org/hiendv/gate) [![GoDoc](https://godoc.org/github.com/hiendv/gate?status.svg)](https://godoc.org/github.com/hiendv/gate) [![Go Report Card](https://goreportcard.com/badge/github.com/hiendv/gate)](https://goreportcard.com/report/github.com/hiendv/gate)  
 An authentication and RBAC authorization library using JWT for Go.
 
 ### Features
@@ -37,7 +37,9 @@ err = auth.Authorize(user, "action", "object")
 ```
 
 You may want to check these examples and tests:
-- Password-based authentication [examples]](https://godoc.org/github.com/hiendv/gate/password#pkg-examples) & [tests](password/password_test.go)
+- Password-based authentication [examples](https://godoc.org/github.com/hiendv/gate/password#pkg-examples) & [tests](password/password_test.go)
 
 ### Credits
-Big thanks to [dgrijalva/jwt-go](https://github.com/dgrijalva/jwt-go) for the enormous help dealing with JWT works.
+Big thanks to:
+- [dgrijalva/jwt-go](https://github.com/dgrijalva/jwt-go) for the enormous help dealing with JWT works
+- [satori/go.uuid](https://github.com/satori/go.uuid) for the claims ID generator
