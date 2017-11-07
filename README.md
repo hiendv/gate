@@ -4,7 +4,7 @@
 <p align="center">
 	<img src="bouncer.svg" alt="Golang Gate" title="Golang Gate" />
 	<br/>
-	An authentication and RBAC authorization library using JWT for Go 1.7+.
+	An authentication and RBAC authorization library using JWT for Go 1.7+
 </p>
 
 ### Features
