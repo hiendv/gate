@@ -39,6 +39,12 @@ err = auth.Authorize(user, "action", "object")
 You may want to check these examples and tests:
 - Password-based authentication [examples](https://godoc.org/github.com/hiendv/gate/password#pkg-examples) & [tests](password/password_test.go)
 
+## Development & Testing
+Please check the [Contributing Guidelines](https://github.com/hiendv/gate/blob/master/CONTRIBUTING.md).
+
+## Contribution
+Issues and PRs are welcome !
+
 ### Credits
 Big thanks to:
 - [dgrijalva/jwt-go](https://github.com/dgrijalva/jwt-go) for the enormous help dealing with JWT works
