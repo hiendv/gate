@@ -4,7 +4,7 @@
 <p align="center">
 	<img src="bouncer.svg" alt="Golang Gate" title="Golang Gate" />
 	<br/>
-	<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+	<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a>.
 	<br/>
 	An authentication and RBAC authorization library using JWT for Go 1.7+.
 </p>
@@ -53,7 +53,7 @@ Please check the [Contributing Guidelines](https://github.com/hiendv/gate/blob/m
 Issues and PRs are welcome !
 
 ### Credits
-*The [Gate bouncer logo](https://github.com/hiendv/gate/blob/master/bouncer.svg) is licensed under the Creative Commons 3.0 Attributions license.*  
+*The [Gate bouncer logo](https://github.com/hiendv/gate/blob/master/bouncer.svg) is licensed under the Creative Commons 4.0 Attributions license.*  
 *The [original gopher.svg](https://github.com/golang-samples/gopher-vector/blob/master/gopher.svg) was created by [Takuya Ueda](https://twitter.com/tenntenn), licensed under the Creative Commons 3.0 Attributions license.*  
 *The Go gopher was designed by [Renee French](http://reneefrench.blogspot.com), licensed under the Creative Commons 3.0 Attributions license.*
 
