@@ -18,30 +18,30 @@ var roleService myRoleService
 
 func TestMain(m *testing.M) {
 	roles := []role{
-		role{
+		{
 			id: randomString(8),
 			abilities: []ability{
-				ability{"GET", "/api/v1/*"},
-				ability{"POST", "/api/v1/users*"},
+				{"GET", "/api/v1/*"},
+				{"POST", "/api/v1/users*"},
 			},
 		},
-		role{
+		{
 			id: randomString(8),
 			abilities: []ability{
-				ability{"GET", "*"},
+				{"GET", "*"},
 			},
 		},
-		role{
+		{
 			id: randomString(8),
 			abilities: []ability{
-				ability{"POST", "/api/v1/posts*"},
+				{"POST", "/api/v1/posts*"},
 			},
 		},
 	}
 
 	userService = myUserService{
 		[]user{
-			user{
+			{
 				id:       randomString(8),
 				username: "foo",
 				roles: []string{

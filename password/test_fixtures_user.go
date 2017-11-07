@@ -15,8 +15,8 @@ type userActual struct {
 }
 
 var actualUsers = []userActual{
-	userActual{id: randomString(8), username: "foo", password: "fooo"},
-	userActual{id: randomString(8), username: "bar", password: "barr"},
+	{id: randomString(8), username: "foo", password: "fooo"},
+	{id: randomString(8), username: "bar", password: "barr"},
 }
 
 type user struct {

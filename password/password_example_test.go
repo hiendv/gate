@@ -14,7 +14,7 @@ func Example() {
 	tokenService := &myTokenService{}
 	userService := &myUserService{
 		[]user{
-			user{
+			{
 				id:       "id",
 				username: "username",
 				roles:    []string{"role-id"},
@@ -23,11 +23,11 @@ func Example() {
 	}
 	roleService := &myRoleService{
 		[]role{
-			role{
+			{
 				id: "role-id",
 				abilities: []ability{
-					ability{"GET", "/api/v1/*"},
-					ability{"POST", "/api/v1/users*"},
+					{"GET", "/api/v1/*"},
+					{"POST", "/api/v1/users*"},
 				},
 			},
 		},
@@ -93,7 +93,7 @@ func Example() {
 func ExampleDriver_Login() {
 	userService := &myUserService{
 		[]user{
-			user{
+			{
 				id:       "id",
 				username: "username",
 				roles:    []string{"role-id"},
@@ -192,7 +192,7 @@ func ExampleDriver_Authenticate() {
 		gate.NewDependencies(
 			&myUserService{
 				[]user{
-					user{
+					{
 						id:       "id",
 						username: "username",
 						roles:    []string{},
