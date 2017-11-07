@@ -1,6 +1,6 @@
 # Gate
 [![Build Status](https://travis-ci.org/hiendv/gate.svg?branch=master)](https://travis-ci.org/hiendv/gate) [![GoDoc](https://godoc.org/github.com/hiendv/gate?status.svg)](https://godoc.org/github.com/hiendv/gate) [![Go Report Card](https://goreportcard.com/badge/github.com/hiendv/gate)](https://goreportcard.com/report/github.com/hiendv/gate)  
-An authentication and RBAC authorization library using JWT for Go.
+An authentication and RBAC authorization library using JWT for Go 1.7+.
 
 ### Features
 - Simple and well-tested API
