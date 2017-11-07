@@ -1,5 +1,6 @@
 language: go
-node_js:
+
+go:
   - 1.6
   - 1.7
   - 1.8
