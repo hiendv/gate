@@ -53,7 +53,7 @@ Issues and PRs are welcome !
 ### Credits
 *The [Gate bouncer logo](https://github.com/hiendv/gate/blob/master/bouncer.svg) is licensed under the Creative Commons 4.0 Attributions license.*  
 *The [original gopher.svg](https://github.com/golang-samples/gopher-vector/blob/master/gopher.svg) was created by [Takuya Ueda](https://twitter.com/tenntenn), licensed under the Creative Commons 3.0 Attributions license.*  
-*The Go gopher was designed by [Renee French](http://reneefrench.blogspot.com), licensed under the Creative Commons 3.0 Attributions license.*
+*The [Go Gopher](https://blog.golang.org/gopher) was designed by [Renee French](http://reneefrench.blogspot.com), licensed under the Creative Commons 3.0 Attributions license.*
 
 Big thanks to:
 - [dgrijalva/jwt-go](https://github.com/dgrijalva/jwt-go) for the enormous help dealing with JWT works
