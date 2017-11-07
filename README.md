@@ -1,11 +1,14 @@
 # Gate
-[![Build Status](https://travis-ci.org/hiendv/gate.svg?branch=master)](https://travis-ci.org/hiendv/gate) [![GoDoc](https://godoc.org/github.com/hiendv/gate?status.svg)](https://godoc.org/github.com/hiendv/gate) [![Go Report Card](https://goreportcard.com/badge/github.com/hiendv/gate)](https://goreportcard.com/report/github.com/hiendv/gate)  
+[![Build Status](https://travis-ci.org/hiendv/gate.svg?branch=master)](https://travis-ci.org/hiendv/gate) [![GoDoc](https://godoc.org/github.com/hiendv/gate?status.svg)](https://godoc.org/github.com/hiendv/gate) [![Go Report Card](https://goreportcard.com/badge/github.com/hiendv/gate)](https://goreportcard.com/report/github.com/hiendv/gate)
+
+<p align="center">
+![Go bouncer](bouncer.svg)  
 An authentication and RBAC authorization library using JWT for Go 1.7+.
 
-![Go bouncer](bouncer.svg)  
 *Gate's logo  is licensed under the Creative Commons 3.0 Attributions license.*  
 *The original [gopher.svg](https://github.com/golang-samples/gopher-vector/blob/master/gopher.svg) was created by [Takuya Ueda](https://twitter.com/tenntenn), licensed under the Creative Commons 3.0 Attributions license.*  
 *The Go gopher was designed by [Renee French](http://reneefrench.blogspot.com), licensed under the Creative Commons 3.0 Attributions license.*
+</p>
 
 ### Features
 - Simple and well-tested API
