@@ -155,103 +155,108 @@ func TestLogin(t *testing.T) {
 	})
 }
 
+func testJWTIssue(t *testing.T) {
+	user, err := userService.findOneByUsername("foo")
+	if err != nil {
+		t.Fatalf("err should not be nil because of the existing user: %s", err)
+	}
+
+	token, err := auth.IssueJWT(user)
+	if err != nil {
+		t.Fatalf("err should not be nil: %s", err)
+	}
+
+	if user.GetID() != token.UserID {
+		t.Fatalf("id mismatch: %s - %s", user.GetID(), token.UserID)
+	}
+
+	_, err = tokenService.FindOneByID(token.ID)
+	if err != nil {
+		t.Fatalf("err should be nil because of the existing token: %s", err)
+	}
+}
+
+func testJWTValidateParseAndFetchUser(t *testing.T) {
+	user, err := userService.findOneByUsername("foo")
+	if err != nil {
+		t.Fatalf("err should not be nil because of the existing user: %s", err)
+	}
+
+	token, err := auth.IssueJWT(user)
+	if err != nil {
+		t.Fatalf("err should not be nil: %s", err)
+	}
+
+	tokenString, err := auth.ParseJWT(token.Value)
+	if err != nil {
+		t.Fatalf("err should be nil because of the valid token: %s", err)
+	}
+
+	_, err = auth.GetUserFromJWT(tokenString)
+	if err != nil {
+		t.Fatalf("err should be nil because of the existing user: %s", err)
+	}
+}
+
+func testJWTValidateAuthenticate(t *testing.T) {
+	user, err := userService.findOneByUsername("foo")
+	if err != nil {
+		t.Fatalf("err should not be nil because of the existing user: %s", err)
+	}
+
+	token, err := auth.IssueJWT(user)
+	if err != nil {
+		t.Fatalf("err should not be nil: %s", err)
+	}
+
+	_, err = auth.Authenticate(token.Value)
+	if err != nil {
+		t.Fatalf("err should be nil because of the existing user: %s", err)
+	}
+}
+
+func testJWTValidateAuthorize(t *testing.T) {
+	user, err := userService.findOneByUsername("foo")
+	if err != nil {
+		t.Fatalf("err should not be nil because of the existing user: %s", err)
+	}
+
+	token, err := auth.IssueJWT(user)
+	if err != nil {
+		t.Fatalf("err should not be nil: %s", err)
+	}
+
+	user, err = auth.Authenticate(token.Value)
+	if err != nil {
+		t.Fatalf("err should be nil because of the existing user: %s", err)
+	}
+
+	err = auth.Authorize(user, "GET", "/api")
+	if err != nil {
+		t.Fatalf("err should be nil because of the valid abilities: %s", err)
+	}
+
+	err = auth.Authorize(user, "GET", "/api/v1/users")
+	if err != nil {
+		t.Fatalf("err should be nil because of the valid abilities: %s", err)
+	}
+
+	err = auth.Authorize(user, "GET", "/api/v1/posts")
+	if err != nil {
+		t.Fatalf("err should be nil because of the valid abilities: %s", err)
+	}
+
+	err = auth.Authorize(user, "POST", "/api/v1/posts")
+	if err == nil {
+		t.Fatal("err should not be nil because of the invalid abilities")
+	}
+}
+
 func TestJWT(t *testing.T) {
-	t.Run("issue", func(t *testing.T) {
-		user, err := userService.findOneByUsername("foo")
-		if err != nil {
-			t.Fatalf("err should not be nil because of the existing user: %s", err)
-		}
-
-		token, err := auth.IssueJWT(user)
-		if err != nil {
-			t.Fatalf("err should not be nil: %s", err)
-		}
-
-		if user.GetID() != token.UserID {
-			t.Fatalf("id mismatch: %s - %s", user.GetID(), token.UserID)
-		}
-
-		_, err = tokenService.FindOneByID(token.ID)
-		if err != nil {
-			t.Fatalf("err should be nil because of the existing token: %s", err)
-		}
-	})
-
+	t.Run("issue", testJWTIssue)
 	t.Run("validate", func(t *testing.T) {
-		t.Run("parse and fetch user", func(t *testing.T) {
-			user, err := userService.findOneByUsername("foo")
-			if err != nil {
-				t.Fatalf("err should not be nil because of the existing user: %s", err)
-			}
-
-			token, err := auth.IssueJWT(user)
-			if err != nil {
-				t.Fatalf("err should not be nil: %s", err)
-			}
-
-			tokenString, err := auth.ParseJWT(token.Value)
-			if err != nil {
-				t.Fatalf("err should be nil because of the valid token: %s", err)
-			}
-
-			_, err = auth.GetUserFromJWT(tokenString)
-			if err != nil {
-				t.Fatalf("err should be nil because of the existing user: %s", err)
-			}
-		})
-
-		t.Run("authenticate", func(t *testing.T) {
-			user, err := userService.findOneByUsername("foo")
-			if err != nil {
-				t.Fatalf("err should not be nil because of the existing user: %s", err)
-			}
-
-			token, err := auth.IssueJWT(user)
-			if err != nil {
-				t.Fatalf("err should not be nil: %s", err)
-			}
-
-			_, err = auth.Authenticate(token.Value)
-			if err != nil {
-				t.Fatalf("err should be nil because of the existing user: %s", err)
-			}
-		})
-
-		t.Run("authorize", func(t *testing.T) {
-			user, err := userService.findOneByUsername("foo")
-			if err != nil {
-				t.Fatalf("err should not be nil because of the existing user: %s", err)
-			}
-
-			token, err := auth.IssueJWT(user)
-			if err != nil {
-				t.Fatalf("err should not be nil: %s", err)
-			}
-
-			user, err = auth.Authenticate(token.Value)
-			if err != nil {
-				t.Fatalf("err should be nil because of the existing user: %s", err)
-			}
-
-			err = auth.Authorize(user, "GET", "/api")
-			if err != nil {
-				t.Fatalf("err should be nil because of the valid abilities: %s", err)
-			}
-
-			err = auth.Authorize(user, "GET", "/api/v1/users")
-			if err != nil {
-				t.Fatalf("err should be nil because of the valid abilities: %s", err)
-			}
-
-			err = auth.Authorize(user, "GET", "/api/v1/posts")
-			if err != nil {
-				t.Fatalf("err should be nil because of the valid abilities: %s", err)
-			}
-
-			err = auth.Authorize(user, "POST", "/api/v1/posts")
-			if err == nil {
-				t.Fatal("err should not be nil because of the invalid abilities")
-			}
-		})
+		t.Run("parse and fetch user", testJWTValidateParseAndFetchUser)
+		t.Run("authenticate", testJWTValidateAuthenticate)
+		t.Run("authorize", testJWTValidateAuthorize)
 	})
 }
