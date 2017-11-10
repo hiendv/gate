@@ -12,7 +12,7 @@ var ErrForbidden = errors.New("forbidden")
 var ErrNoAbilities = errors.New("there is no abilities")
 
 // LoginFunc is the handler of password-based authentication
-type LoginFunc func(username, password string) (gate.User, error)
+type LoginFunc func(email, password string) (gate.User, error)
 
 // Driver is password-based authentication
 type Driver struct {
@@ -97,9 +97,9 @@ func (auth Driver) Matcher() (gate.Matcher, error) {
 
 // Login resolves password-based authentication with the given handler and credentials
 func (auth Driver) Login(credentials map[string]string) (user gate.User, err error) {
-	username, ok := credentials["username"]
+	email, ok := credentials["email"]
 	if !ok {
-		err = errors.New("missing username")
+		err = errors.New("missing email")
 		return
 	}
 
@@ -109,7 +109,7 @@ func (auth Driver) Login(credentials map[string]string) (user gate.User, err err
 		return
 	}
 
-	user, err = auth.handler(username, password)
+	user, err = auth.handler(email, password)
 	if err != nil {
 		err = errors.Wrap(err, "could not login")
 	}

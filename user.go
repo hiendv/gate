@@ -3,7 +3,7 @@ package gate
 // User is the contract for the user entity
 type User interface {
 	GetID() string
-	GetUsername() string
+	GetEmail() string
 	GetRoles() []string
 }
 
@@ -20,7 +20,7 @@ type UserAbility interface {
 
 // UserInfo is the user information entity
 type UserInfo struct {
-	ID       string   `json:"id"`
-	Username string   `json:"username"`
-	Roles    []string `json:"roles"`
+	ID    string   `json:"id"`
+	Email string   `json:"email"`
+	Roles []string `json:"roles"`
 }

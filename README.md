@@ -33,7 +33,7 @@ var err error
 // some codes go here
 
 // Login using password-based authentication & Issue the JWT
-user, err = auth.Login(map[string]string{"username": "username", "password": "password"})
+user, err = auth.Login(map[string]string{"email": "email", "password": "password"})
 jwt, err := auth.IssueJWT(user)
 
 // Authenticate with a given JWT

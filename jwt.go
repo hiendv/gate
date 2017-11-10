@@ -242,9 +242,9 @@ func (service JWTService) getVerifyingKey(token *jwt.Token) (key interface{}, er
 func (service JWTService) NewClaims(user User) JWTClaims {
 	return JWTClaims{
 		User: UserInfo{
-			ID:       user.GetID(),
-			Username: user.GetUsername(),
-			Roles:    user.GetRoles(),
+			ID:    user.GetID(),
+			Email: user.GetEmail(),
+			Roles: user.GetRoles(),
 		},
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: service.Now().Add(service.config.expiration).Unix(),

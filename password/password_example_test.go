@@ -15,9 +15,9 @@ func Example() {
 	userService := &myUserService{
 		[]user{
 			{
-				id:       "id",
-				username: "username",
-				roles:    []string{"role-id"},
+				id:    "id",
+				email: "email@local",
+				roles: []string{"role-id"},
 			},
 		},
 	}
@@ -36,17 +36,18 @@ func Example() {
 	auth = New(
 		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 		gate.NewDependencies(userService, tokenService, roleService),
-		func(username, password string) (gate.User, error) {
-			if username == "username" && password == "password" {
-				return userService.FindOrCreateOneByUsername(username)
+		func(email, password string) (gate.User, error) {
+			if email == "email@local" && password == "password" {
+				return userService.FindOrCreateOneByEmail(email)
 			}
 
 			return nil, errors.New("invalid credentials")
 		},
 	)
 
-	user, err := auth.Login(map[string]string{"username": "username", "password": "password"})
+	user, err := auth.Login(map[string]string{"email": "email@local", "password": "password"})
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
@@ -66,7 +67,7 @@ func Example() {
 		return
 	}
 
-	fmt.Printf("%s:%s - %v\n", parsedUser.GetID(), parsedUser.GetUsername(), err)
+	fmt.Printf("%s:%s - %v\n", parsedUser.GetID(), parsedUser.GetEmail(), err)
 
 	err = auth.Authorize(parsedUser, "GET", "/api/v1/users")
 	fmt.Printf("%v\n", err)
@@ -83,7 +84,7 @@ func Example() {
 	// Output:
 	// Tokens: 0
 	// Tokens: 1
-	// id:username - <nil>
+	// id:email@local - <nil>
 	// <nil>
 	// <nil>
 	// <nil>
@@ -94,9 +95,9 @@ func ExampleDriver_Login() {
 	userService := &myUserService{
 		[]user{
 			{
-				id:       "id",
-				username: "username",
-				roles:    []string{"role-id"},
+				id:    "id",
+				email: "email@local",
+				roles: []string{"role-id"},
 			},
 		},
 	}
@@ -104,51 +105,51 @@ func ExampleDriver_Login() {
 	auth := New(
 		gate.Config{},
 		gate.NewDependencies(userService, nil, nil),
-		func(username, password string) (gate.User, error) {
-			if username == "username" && password == "password" {
-				return userService.FindOrCreateOneByUsername(username)
+		func(email, password string) (gate.User, error) {
+			if email == "email@local" && password == "password" {
+				return userService.FindOrCreateOneByEmail(email)
 			}
 
-			if username == "username2" && password == "password2" {
-				return userService.FindOrCreateOneByUsername(username)
+			if email == "email2@local" && password == "password2" {
+				return userService.FindOrCreateOneByEmail(email)
 			}
 
 			return nil, errors.New("invalid credentials")
 		},
 	)
 
-	user, err := auth.Login(map[string]string{"username": "username", "password": "password"})
+	user, err := auth.Login(map[string]string{"email": "email@local", "password": "password"})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Printf("%s:%s - %v\n", user.GetID(), user.GetUsername(), err)
+	fmt.Printf("%s:%s - %v\n", user.GetID(), user.GetEmail(), err)
 
 	generateMyUserID = func() string {
 		return "a-fixed-id"
 	}
 
-	secondUser, err := auth.Login(map[string]string{"username": "username2", "password": "password2"})
+	secondUser, err := auth.Login(map[string]string{"email": "email2@local", "password": "password2"})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Printf("%s:%s - %v\n", secondUser.GetID(), secondUser.GetUsername(), err)
+	fmt.Printf("%s:%s - %v\n", secondUser.GetID(), secondUser.GetEmail(), err)
 
 	// Output:
-	// id:username - <nil>
-	// a-fixed-id:username2 - <nil>
+	// id:email@local - <nil>
+	// a-fixed-id:email2@local - <nil>
 }
 
 func ExampleDriver_IssueJWT() {
 	auth := New(
 		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 		gate.NewDependencies(nil, &myTokenService{}, nil),
-		func(username, password string) (gate.User, error) {
-			if username == "username" && password == "password" {
-				return user{"id", "username", []string{"role"}}, nil
+		func(email, password string) (gate.User, error) {
+			if email == "email@local" && password == "password" {
+				return user{"id", "email@local", []string{"role"}}, nil
 			}
 
 			return nil, errors.New("invalid credentials")
@@ -157,6 +158,7 @@ func ExampleDriver_IssueJWT() {
 
 	jwtConfig, err := gate.NewHMACJWTConfig("HS256", auth.config.JWTSigningKey(), auth.config.JWTExpiration(), auth.config.JWTSkipClaimsValidation())
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
@@ -170,8 +172,9 @@ func ExampleDriver_IssueJWT() {
 
 	auth.dependencies.SetJWTService(mockedJWTService)
 
-	user, err := auth.Login(map[string]string{"username": "username", "password": "password"})
+	user, err := auth.Login(map[string]string{"email": "email@local", "password": "password"})
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
@@ -183,7 +186,7 @@ func ExampleDriver_IssueJWT() {
 
 	fmt.Printf("%s:%s@%s - %v", jwt.ID, jwt.Value, jwt.UserID, err)
 
-	// Output: claims-id:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiaWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwicm9sZXMiOlsicm9sZSJdfSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDB9.b0gxC2uZRek-SPwHSqyLOoW_DjSYroSivLqJG96Zxl0@id - <nil>
+	// Output: claims-id:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiaWQiLCJlbWFpbCI6ImVtYWlsQGxvY2FsIiwicm9sZXMiOlsicm9sZSJdfSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDB9.aCp3Bx6aH48sYAeCSXhQyXGAYTiyr9VSkC3mT7dmUeE@id - <nil>
 }
 
 func ExampleDriver_Authenticate() {
@@ -193,9 +196,9 @@ func ExampleDriver_Authenticate() {
 			&myUserService{
 				[]user{
 					{
-						id:       "id",
-						username: "username",
-						roles:    []string{},
+						id:    "id",
+						email: "email@local",
+						roles: []string{},
 					},
 				},
 			},
@@ -211,7 +214,7 @@ func ExampleDriver_Authenticate() {
 		return
 	}
 
-	fmt.Printf("%s:%s - %v", user.GetID(), user.GetUsername(), err)
+	fmt.Printf("%s:%s - %v", user.GetID(), user.GetEmail(), err)
 
-	// Output: id:username - <nil>
+	// Output: id:email@local - <nil>
 }

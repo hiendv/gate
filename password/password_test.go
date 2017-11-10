@@ -42,8 +42,8 @@ func TestMain(m *testing.M) {
 	userService = myUserService{
 		[]user{
 			{
-				id:       randomString(8),
-				username: "foo",
+				id:    randomString(8),
+				email: "foo@local",
 				roles: []string{
 					roles[0].id,
 					roles[1].id,
@@ -59,10 +59,10 @@ func TestMain(m *testing.M) {
 	driver = New(
 		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 		gate.NewDependencies(&userService, &tokenService, &roleService),
-		func(username, password string) (gate.User, error) {
-			for _, record := range actualUsers {
-				if record.username == username && record.password == password {
-					return userService.FindOrCreateOneByUsername(username)
+		func(email, password string) (gate.User, error) {
+			for _, record := range credentials {
+				if record.Valid(email, password) {
+					return userService.FindOrCreateOneByEmail(record.GetEmail())
 				}
 			}
 
@@ -78,8 +78,8 @@ func TestLogin(t *testing.T) {
 	t.Run("login func", func(t *testing.T) {
 		handler := driver.handler
 
-		driver.handler = func(username, password string) (gate.User, error) {
-			if username == "username" && password == "password" {
+		driver.handler = func(email, password string) (gate.User, error) {
+			if email == "email@local" && password == "password" {
 				return user{}, nil
 			}
 
@@ -87,14 +87,14 @@ func TestLogin(t *testing.T) {
 		}
 
 		t.Run("valid", func(t *testing.T) {
-			_, err := auth.Login(map[string]string{"username": "username", "password": "password"})
+			_, err := auth.Login(map[string]string{"email": "email@local", "password": "password"})
 			if err != nil {
 				t.Fatalf("err should be nil because of the valid credentials: %s", err)
 			}
 		})
 
 		t.Run("invalid", func(t *testing.T) {
-			_, err := auth.Login(map[string]string{"username": "username", "password": ""})
+			_, err := auth.Login(map[string]string{"email": "email@local", "password": ""})
 			if err == nil {
 				t.Fatalf("err should not be nil because of the invalid credentials")
 			}
@@ -105,17 +105,17 @@ func TestLogin(t *testing.T) {
 
 	t.Run("valid login", func(t *testing.T) {
 		t.Run("first time", func(t *testing.T) {
-			_, err := userService.findOneByUsername("bar")
+			_, err := userService.findOneByEmail("bar@local")
 			if err == nil {
 				t.Fatalf("err should be userNotFound because of the non-existing user")
 			}
 
-			firstUser, err := auth.Login(map[string]string{"username": "bar", "password": "barr"})
+			firstUser, err := auth.Login(map[string]string{"email": "bar@local", "password": "barr"})
 			if err != nil {
 				t.Fatalf("err should be nil because of the valid credentials: %s", err)
 			}
 
-			secondUser, err := auth.Login(map[string]string{"username": "bar", "password": "barr"})
+			secondUser, err := auth.Login(map[string]string{"email": "bar@local", "password": "barr"})
 			if err != nil {
 				t.Fatalf("err should be nil because of the valid credentials: %s", err)
 			}
@@ -124,19 +124,19 @@ func TestLogin(t *testing.T) {
 				t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
 			}
 
-			_, err = userService.findOneByUsername("bar")
+			_, err = userService.findOneByEmail("bar@local")
 			if err != nil {
 				t.Fatalf("err should be nil because of the existing user: %s", err)
 			}
 		})
 
 		t.Run("later", func(t *testing.T) {
-			firstUser, err := userService.findOneByUsername("foo")
+			firstUser, err := userService.findOneByEmail("foo@local")
 			if err != nil {
 				t.Fatalf("err should not be nil because of the existing user: %s", err)
 			}
 
-			secondUser, err := auth.Login(map[string]string{"username": "foo", "password": "fooo"})
+			secondUser, err := auth.Login(map[string]string{"email": "foo@local", "password": "fooo"})
 			if err != nil {
 				t.Fatalf("err should be nil because of the valid credentials: %s", err)
 			}
@@ -148,7 +148,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("invalid login", func(t *testing.T) {
-		_, err := auth.Login(map[string]string{"username": "foo", "password": "barr"})
+		_, err := auth.Login(map[string]string{"email": "foo", "password": "barr"})
 		if err == nil {
 			t.Fatalf("err should not be nil because of the invalid credentials")
 		}
@@ -156,7 +156,7 @@ func TestLogin(t *testing.T) {
 }
 
 func testJWTIssue(t *testing.T) {
-	user, err := userService.findOneByUsername("foo")
+	user, err := userService.findOneByEmail("foo@local")
 	if err != nil {
 		t.Fatalf("err should not be nil because of the existing user: %s", err)
 	}
@@ -177,7 +177,7 @@ func testJWTIssue(t *testing.T) {
 }
 
 func testJWTValidateParseAndFetchUser(t *testing.T) {
-	user, err := userService.findOneByUsername("foo")
+	user, err := userService.findOneByEmail("foo@local")
 	if err != nil {
 		t.Fatalf("err should not be nil because of the existing user: %s", err)
 	}
@@ -199,7 +199,7 @@ func testJWTValidateParseAndFetchUser(t *testing.T) {
 }
 
 func testJWTValidateAuthenticate(t *testing.T) {
-	user, err := userService.findOneByUsername("foo")
+	user, err := userService.findOneByEmail("foo@local")
 	if err != nil {
 		t.Fatalf("err should not be nil because of the existing user: %s", err)
 	}
@@ -216,7 +216,7 @@ func testJWTValidateAuthenticate(t *testing.T) {
 }
 
 func testJWTValidateAuthorize(t *testing.T) {
-	user, err := userService.findOneByUsername("foo")
+	user, err := userService.findOneByEmail("foo@local")
 	if err != nil {
 		t.Fatalf("err should not be nil because of the existing user: %s", err)
 	}
