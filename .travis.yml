@@ -5,3 +5,5 @@ go:
   - 1.8
   - 1.9
   - master
+
+script: go test -v -race $(go list ./... | grep -v /vendor/)
