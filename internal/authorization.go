@@ -5,6 +5,7 @@ type Ability interface {
 	GetObject() string
 }
 
+// AuthorizationCheck performs the check for an action on object with a given ability and a matcher
 func AuthorizationCheck(matcher Matcher, action, object string, ability Ability) bool {
 	if ability.GetAction() == "" {
 		return false

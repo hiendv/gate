@@ -9,12 +9,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-var auth gate.Auth
-var driver *Driver
+var (
+	auth   gate.Auth
+	driver *Driver
 
-var userService myUserService
-var tokenService myTokenService
-var roleService myRoleService
+	userService  myUserService
+	tokenService myTokenService
+	roleService  myRoleService
+)
 
 func TestMain(m *testing.M) {
 	roles := []role{

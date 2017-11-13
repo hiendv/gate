@@ -6,12 +6,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ErrForbidden is thrown when an user is forbidden to take an action on an object
-var ErrForbidden = errors.New("forbidden")
-
-// ErrNoAbilities is thrown when an user has no abilities
-var ErrNoAbilities = errors.New("there is no abilities")
-
 // LoginFunc is the handler of password-based authentication
 type LoginFunc func(email, password string) (gate.User, error)
 
@@ -180,21 +174,7 @@ func (auth Driver) Authenticate(tokenString string) (user gate.User, err error) 
 
 // Authorize performs the authorization when a given user takes an action on an object using RBAC
 func (auth Driver) Authorize(user gate.User, action, object string) (err error) {
-	abilities, err := auth.GetUserAbilities(user)
-	if err != nil {
-		err = errors.Wrap(err, "could not get the abilities")
-		return
-	}
-
-	if len(abilities) == 0 {
-		err = ErrNoAbilities
-		return
-	}
-
-	if !auth.authorizationCheck(action, object, abilities) {
-		err = ErrForbidden
-	}
-	return
+	return gate.Authorize(auth, user, action, object)
 }
 
 // GetUserFromJWT returns a user from a given JWT
@@ -233,20 +213,4 @@ func (auth Driver) GetUserAbilities(user gate.User) (abilities []gate.UserAbilit
 		abilities = append(abilities, role.GetAbilities()...)
 	}
 	return
-}
-
-func (auth Driver) authorizationCheck(action, object string, abilities []gate.UserAbility) bool {
-	matcher, err := auth.Matcher()
-	if err != nil {
-		return false
-	}
-
-	for _, ability := range abilities {
-		matched := internal.AuthorizationCheck(matcher, action, object, ability)
-		if matched {
-			return true
-		}
-	}
-
-	return false
 }
