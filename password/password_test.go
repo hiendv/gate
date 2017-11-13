@@ -1,12 +1,12 @@
 package password
 
 import (
-	"errors"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/hiendv/gate"
+	"github.com/pkg/errors"
 )
 
 var auth gate.Auth

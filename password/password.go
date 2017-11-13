@@ -2,6 +2,7 @@ package password
 
 import (
 	"github.com/hiendv/gate"
+	"github.com/hiendv/gate/internal"
 	"github.com/pkg/errors"
 )
 
@@ -29,7 +30,7 @@ func New(config gate.Config, dependencies *gate.Dependencies, handler LoginFunc)
 	}
 
 	dependencies.SetJWTService(gate.NewJWTService(jwtConfig))
-	dependencies.SetMatcher(gate.NewMatcher())
+	dependencies.SetMatcher(internal.NewMatcher())
 	return &Driver{config, dependencies, handler}
 }
 
@@ -87,9 +88,9 @@ func (auth Driver) JWTService() (gate.JWTService, error) {
 }
 
 // Matcher returns Matcher instance from the dependencies or throws an error if the instance is invalid
-func (auth Driver) Matcher() (gate.Matcher, error) {
+func (auth Driver) Matcher() (internal.Matcher, error) {
 	if auth.dependencies == nil {
-		return gate.Matcher{}, errors.New("invalid dependencies")
+		return internal.Matcher{}, errors.New("invalid dependencies")
 	}
 
 	return auth.dependencies.Matcher(), nil

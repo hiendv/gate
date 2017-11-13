@@ -1,9 +1,8 @@
 package password
 
 import (
-	"errors"
-
 	"github.com/hiendv/gate"
+	"github.com/pkg/errors"
 )
 
 var errUserNotFound = errors.New("user not found")

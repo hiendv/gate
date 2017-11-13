@@ -2,6 +2,8 @@ package gate
 
 import (
 	"time"
+
+	"github.com/hiendv/gate/internal"
 )
 
 // Auth is the common interface for authentication and authorization. E.g. PasswordBased, OAuth, etc.
@@ -12,7 +14,7 @@ type Auth interface {
 	RoleService() (RoleService, error)
 	TokenService() (TokenService, error)
 	JWTService() (JWTService, error)
-	Matcher() (Matcher, error)
+	Matcher() (internal.Matcher, error)
 
 	Login(map[string]string) (User, error)
 
@@ -83,7 +85,7 @@ type Dependencies struct {
 	roleService  RoleService
 	tokenService TokenService
 	jwtService   JWTService
-	matcher      Matcher
+	matcher      internal.Matcher
 }
 
 // UserService is the getter for user service
@@ -107,7 +109,7 @@ func (dependencies Dependencies) JWTService() JWTService {
 }
 
 // Matcher is the getter for matcher
-func (dependencies Dependencies) Matcher() Matcher {
+func (dependencies Dependencies) Matcher() internal.Matcher {
 	return dependencies.matcher
 }
 
@@ -117,7 +119,7 @@ func (dependencies *Dependencies) SetJWTService(service JWTService) {
 }
 
 // SetMatcher is the setter for matcher
-func (dependencies *Dependencies) SetMatcher(matcher Matcher) {
+func (dependencies *Dependencies) SetMatcher(matcher internal.Matcher) {
 	dependencies.matcher = matcher
 }
 

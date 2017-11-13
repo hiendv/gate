@@ -1,9 +1,10 @@
-package gate
+package internal
 
 import (
-	"errors"
 	"regexp"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 // ErrInvalidExpression is thrown when the given expression is invalid

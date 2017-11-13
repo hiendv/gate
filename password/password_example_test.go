@@ -1,11 +1,11 @@
 package password
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/hiendv/gate"
+	"github.com/pkg/errors"
 )
 
 func Example() {

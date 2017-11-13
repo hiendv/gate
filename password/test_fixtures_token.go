@@ -1,10 +1,10 @@
 package password
 
 import (
-	"errors"
 	"time"
 
 	"github.com/hiendv/gate"
+	"github.com/pkg/errors"
 )
 
 var errTokenNotFound = errors.New("token not found")
