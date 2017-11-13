@@ -235,34 +235,18 @@ func (auth Driver) GetUserAbilities(user gate.User) (abilities []gate.UserAbilit
 	return
 }
 
-func (auth Driver) authorizationCheck(action, object string, abilities []gate.UserAbility) (found bool) {
+func (auth Driver) authorizationCheck(action, object string, abilities []gate.UserAbility) bool {
 	matcher, err := auth.Matcher()
 	if err != nil {
-		return
+		return false
 	}
 
 	for _, ability := range abilities {
-		if ability.GetAction() == "" {
-			continue
+		matched := internal.AuthorizationCheck(matcher, action, object, ability)
+		if matched {
+			return true
 		}
-
-		if ability.GetObject() == "" {
-			continue
-		}
-
-		actionMatch, err := matcher.Match(action, ability.GetAction())
-		if err != nil || !actionMatch {
-			continue
-		}
-
-		objectMatch, err := matcher.Match(object, ability.GetObject())
-		if err != nil || !objectMatch {
-			continue
-		}
-
-		found = true
-		break
 	}
 
-	return
+	return false
 }
