@@ -6,33 +6,30 @@ import (
 
 	"github.com/hiendv/gate"
 	"github.com/hiendv/gate/dependency"
+	"github.com/hiendv/gate/test/fixtures"
 	"github.com/pkg/errors"
 )
 
 func Example() {
 	var auth gate.Auth
 
-	tokenService := &myTokenService{}
-	userService := &myUserService{
-		[]user{
-			{
-				id:    "id",
-				email: "email@local",
-				roles: []string{"role-id"},
+	userService := fixtures.NewMyUserService([]fixtures.User{
+		{
+			ID:    "id",
+			Email: "email@local",
+			Roles: []string{"role-id"},
+		},
+	})
+	tokenService := &fixtures.MyTokenService{}
+	roleService := fixtures.NewMyRoleService([]fixtures.Role{
+		{
+			ID: "role-id",
+			Abilities: []fixtures.Ability{
+				{"GET", "/api/v1/*"},
+				{"POST", "/api/v1/users*"},
 			},
 		},
-	}
-	roleService := &myRoleService{
-		[]role{
-			{
-				id: "role-id",
-				abilities: []ability{
-					{"GET", "/api/v1/*"},
-					{"POST", "/api/v1/users*"},
-				},
-			},
-		},
-	}
+	})
 
 	auth = New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
@@ -52,7 +49,7 @@ func Example() {
 		return
 	}
 
-	fmt.Printf("Tokens: %d\n", len(tokenService.records))
+	fmt.Printf("Tokens: %d\n", tokenService.Count())
 
 	jwt, err := auth.IssueJWT(user)
 	if err != nil {
@@ -60,7 +57,7 @@ func Example() {
 		return
 	}
 
-	fmt.Printf("Tokens: %d\n", len(tokenService.records))
+	fmt.Printf("Tokens: %d\n", tokenService.Count())
 
 	parsedUser, err := auth.Authenticate(jwt.Value)
 	if err != nil {
@@ -93,15 +90,14 @@ func Example() {
 }
 
 func ExampleDriver_Login() {
-	userService := &myUserService{
-		[]user{
-			{
-				id:    "id",
-				email: "email@local",
-				roles: []string{"role-id"},
-			},
+
+	userService := fixtures.NewMyUserService([]fixtures.User{
+		{
+			ID:    "id",
+			Email: "email@local",
+			Roles: []string{"role-id"},
 		},
-	}
+	})
 
 	auth := New(
 		Config{},
@@ -127,7 +123,7 @@ func ExampleDriver_Login() {
 
 	fmt.Printf("%s:%s - %v\n", user.GetID(), user.GetEmail(), err)
 
-	generateMyUserID = func() string {
+	userService.GenerateMyUserID = func() string {
 		return "a-fixed-id"
 	}
 
@@ -149,12 +145,12 @@ func ExampleDriver_IssueJWT() {
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 		func(email, password string) (gate.User, error) {
 			if email == "email@local" && password == "password" {
-				return user{"id", "email@local", []string{"role"}}, nil
+				return fixtures.User{"id", "email@local", []string{"role"}}, nil
 			}
 
 			return nil, errors.New("invalid credentials")
 		},
-		dependency.NewContainer(nil, &myTokenService{}, nil),
+		dependency.NewContainer(nil, &fixtures.MyTokenService{}, nil),
 	)
 
 	jwtConfig, err := gate.NewHMACJWTConfig("HS256", auth.config.JWTSigningKey(), auth.config.JWTExpiration(), auth.config.JWTSkipClaimsValidation())
@@ -195,16 +191,14 @@ func ExampleDriver_Authenticate() {
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, true)},
 		nil,
 		dependency.NewContainer(
-			&myUserService{
-				[]user{
-					{
-						id:    "id",
-						email: "email@local",
-						roles: []string{},
-					},
+			fixtures.NewMyUserService([]fixtures.User{
+				{
+					ID:    "id",
+					Email: "email@local",
+					Roles: []string{},
 				},
-			},
-			&myTokenService{},
+			}),
+			&fixtures.MyTokenService{},
 			nil,
 		),
 	)

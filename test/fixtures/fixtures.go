@@ -1,4 +1,4 @@
-package password
+package fixtures
 
 import (
 	"math/rand"
@@ -9,7 +9,8 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func randomString(length int) string {
+// RandomString return a random string of a given length
+func RandomString(length int) string {
 	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	result := make([]byte, length)
 	for i := range result {

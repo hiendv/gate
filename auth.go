@@ -13,6 +13,7 @@ type Auth interface {
 	Matcher() (internal.Matcher, error)
 
 	Login(map[string]string) (User, error)
+	LoginURL(string) (string, error)
 
 	IssueJWT(User) (JWT, error)
 	ParseJWT(string) (JWT, error)

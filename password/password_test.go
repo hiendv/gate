@@ -7,6 +7,7 @@ import (
 
 	"github.com/hiendv/gate"
 	"github.com/hiendv/gate/dependency"
+	"github.com/hiendv/gate/test/fixtures"
 	"github.com/pkg/errors"
 )
 
@@ -14,49 +15,47 @@ var (
 	auth   gate.Auth
 	driver *Driver
 
-	userService  myUserService
-	tokenService myTokenService
-	roleService  myRoleService
+	userService  *fixtures.MyUserService
+	tokenService fixtures.MyTokenService
+	roleService  *fixtures.MyRoleService
 )
 
 func TestMain(m *testing.M) {
-	roles := []role{
+	roles := []fixtures.Role{
 		{
-			id: randomString(8),
-			abilities: []ability{
+			ID: fixtures.RandomString(8),
+			Abilities: []fixtures.Ability{
 				{"GET", "/api/v1/*"},
 				{"POST", "/api/v1/users*"},
 			},
 		},
 		{
-			id: randomString(8),
-			abilities: []ability{
+			ID: fixtures.RandomString(8),
+			Abilities: []fixtures.Ability{
 				{"GET", "*"},
 			},
 		},
 		{
-			id: randomString(8),
-			abilities: []ability{
+			ID: fixtures.RandomString(8),
+			Abilities: []fixtures.Ability{
 				{"POST", "/api/v1/posts*"},
 			},
 		},
 	}
 
-	userService = myUserService{
-		[]user{
-			{
-				id:    randomString(8),
-				email: "foo@local",
-				roles: []string{
-					roles[0].id,
-					roles[1].id,
-				},
+	userService = fixtures.NewMyUserService([]fixtures.User{
+		{
+			ID:    fixtures.RandomString(8),
+			Email: "foo@local",
+			Roles: []string{
+				roles[0].ID,
+				roles[1].ID,
 			},
 		},
-	}
+	})
 
-	tokenService = myTokenService{}
-	roleService = myRoleService{roles}
+	tokenService = fixtures.MyTokenService{}
+	roleService = fixtures.NewMyRoleService(roles)
 
 	// prepare for mocking
 	driver = New(
@@ -70,96 +69,100 @@ func TestMain(m *testing.M) {
 
 			return nil, errors.New("invalid credentials")
 		},
-		dependency.NewContainer(&userService, &tokenService, &roleService),
+		dependency.NewContainer(userService, &tokenService, roleService),
 	)
 	auth = driver
 
 	os.Exit(m.Run())
 }
 
-func TestLogin(t *testing.T) {
-	t.Run("login func", func(t *testing.T) {
-		handler := driver.handler
+func testLoginFunc(t *testing.T) {
+	handler := driver.handler
 
-		driver.handler = func(email, password string) (gate.User, error) {
-			if email == "email@local" && password == "password" {
-				return user{}, nil
-			}
-
-			return nil, errors.New("invalid credentials")
+	driver.handler = func(email, password string) (gate.User, error) {
+		if email == "email@local" && password == "password" {
+			return fixtures.User{}, nil
 		}
 
-		t.Run("valid", func(t *testing.T) {
-			_, err := auth.Login(map[string]string{"email": "email@local", "password": "password"})
-			if err != nil {
-				t.Fatalf("err should be nil because of the valid credentials: %s", err)
-			}
-		})
+		return nil, errors.New("invalid credentials")
+	}
 
-		t.Run("invalid", func(t *testing.T) {
-			_, err := auth.Login(map[string]string{"email": "email@local", "password": ""})
-			if err == nil {
-				t.Fatalf("err should not be nil because of the invalid credentials")
-			}
-		})
-
-		driver.handler = handler
+	t.Run("valid", func(t *testing.T) {
+		_, err := auth.Login(map[string]string{"email": "email@local", "password": "password"})
+		if err != nil {
+			t.Fatalf("err should be nil because of the valid credentials: %s", err)
+		}
 	})
 
-	t.Run("valid login", func(t *testing.T) {
-		t.Run("first time", func(t *testing.T) {
-			_, err := userService.findOneByEmail("bar@local")
-			if err == nil {
-				t.Fatalf("err should be userNotFound because of the non-existing user")
-			}
-
-			firstUser, err := auth.Login(map[string]string{"email": "bar@local", "password": "barr"})
-			if err != nil {
-				t.Fatalf("err should be nil because of the valid credentials: %s", err)
-			}
-
-			secondUser, err := auth.Login(map[string]string{"email": "bar@local", "password": "barr"})
-			if err != nil {
-				t.Fatalf("err should be nil because of the valid credentials: %s", err)
-			}
-
-			if firstUser.GetID() != secondUser.GetID() {
-				t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
-			}
-
-			_, err = userService.findOneByEmail("bar@local")
-			if err != nil {
-				t.Fatalf("err should be nil because of the existing user: %s", err)
-			}
-		})
-
-		t.Run("later", func(t *testing.T) {
-			firstUser, err := userService.findOneByEmail("foo@local")
-			if err != nil {
-				t.Fatalf("err should not be nil because of the existing user: %s", err)
-			}
-
-			secondUser, err := auth.Login(map[string]string{"email": "foo@local", "password": "fooo"})
-			if err != nil {
-				t.Fatalf("err should be nil because of the valid credentials: %s", err)
-			}
-
-			if firstUser.GetID() != secondUser.GetID() {
-				t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
-			}
-		})
-	})
-
-	t.Run("invalid login", func(t *testing.T) {
-		_, err := auth.Login(map[string]string{"email": "foo", "password": "barr"})
+	t.Run("invalid", func(t *testing.T) {
+		_, err := auth.Login(map[string]string{"email": "email@local", "password": ""})
 		if err == nil {
 			t.Fatalf("err should not be nil because of the invalid credentials")
 		}
 	})
+
+	driver.handler = handler
+}
+
+func testValidLogin(t *testing.T) {
+	t.Run("first time", func(t *testing.T) {
+		_, err := userService.FindOneByEmail("bar@local")
+		if err == nil {
+			t.Fatalf("err should be userNotFound because of the non-existing user")
+		}
+
+		firstUser, err := auth.Login(map[string]string{"email": "bar@local", "password": "barr"})
+		if err != nil {
+			t.Fatalf("err should be nil because of the valid credentials: %s", err)
+		}
+
+		secondUser, err := auth.Login(map[string]string{"email": "bar@local", "password": "barr"})
+		if err != nil {
+			t.Fatalf("err should be nil because of the valid credentials: %s", err)
+		}
+
+		if firstUser.GetID() != secondUser.GetID() {
+			t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
+		}
+
+		_, err = userService.FindOneByEmail("bar@local")
+		if err != nil {
+			t.Fatalf("err should be nil because of the existing user: %s", err)
+		}
+	})
+
+	t.Run("later", func(t *testing.T) {
+		firstUser, err := userService.FindOneByEmail("foo@local")
+		if err != nil {
+			t.Fatalf("err should not be nil because of the existing user: %s", err)
+		}
+
+		secondUser, err := auth.Login(map[string]string{"email": "foo@local", "password": "fooo"})
+		if err != nil {
+			t.Fatalf("err should be nil because of the valid credentials: %s", err)
+		}
+
+		if firstUser.GetID() != secondUser.GetID() {
+			t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
+		}
+	})
+}
+
+func testInvalidLogin(t *testing.T) {
+	_, err := auth.Login(map[string]string{"email": "foo", "password": "barr"})
+	if err == nil {
+		t.Fatalf("err should not be nil because of the invalid credentials")
+	}
+}
+
+func TestLogin(t *testing.T) {
+	t.Run("login func", testLoginFunc)
+	t.Run("valid login", testValidLogin)
+	t.Run("invalid login", testInvalidLogin)
 }
 
 func testJWTIssue(t *testing.T) {
-	user, err := userService.findOneByEmail("foo@local")
+	user, err := userService.FindOneByEmail("foo@local")
 	if err != nil {
 		t.Fatalf("err should not be nil because of the existing user: %s", err)
 	}
@@ -180,7 +183,7 @@ func testJWTIssue(t *testing.T) {
 }
 
 func testJWTValidateParseAndFetchUser(t *testing.T) {
-	user, err := userService.findOneByEmail("foo@local")
+	user, err := userService.FindOneByEmail("foo@local")
 	if err != nil {
 		t.Fatalf("err should not be nil because of the existing user: %s", err)
 	}
@@ -202,7 +205,7 @@ func testJWTValidateParseAndFetchUser(t *testing.T) {
 }
 
 func testJWTValidateAuthenticate(t *testing.T) {
-	user, err := userService.findOneByEmail("foo@local")
+	user, err := userService.FindOneByEmail("foo@local")
 	if err != nil {
 		t.Fatalf("err should not be nil because of the existing user: %s", err)
 	}
@@ -219,7 +222,7 @@ func testJWTValidateAuthenticate(t *testing.T) {
 }
 
 func testJWTValidateAuthorize(t *testing.T) {
-	user, err := userService.findOneByEmail("foo@local")
+	user, err := userService.FindOneByEmail("foo@local")
 	if err != nil {
 		t.Fatalf("err should not be nil because of the existing user: %s", err)
 	}

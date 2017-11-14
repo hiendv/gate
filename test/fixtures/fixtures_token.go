@@ -1,4 +1,4 @@
-package password
+package fixtures
 
 import (
 	"time"
@@ -17,11 +17,13 @@ type token struct {
 	issuedAt  time.Time
 }
 
-type myTokenService struct {
+// MyTokenService is my token service
+type MyTokenService struct {
 	records []token
 }
 
-func (service *myTokenService) Store(jwt gate.JWT) error {
+// Store appends the token
+func (service *MyTokenService) Store(jwt gate.JWT) error {
 	service.records = append(service.records, token{
 		jwt.ID,
 		jwt.Value,
@@ -32,7 +34,8 @@ func (service *myTokenService) Store(jwt gate.JWT) error {
 	return nil
 }
 
-func (service myTokenService) FindOneByID(id string) (jwt gate.JWT, err error) {
+// FindOneByID fetches the JWT with the given ID
+func (service MyTokenService) FindOneByID(id string) (jwt gate.JWT, err error) {
 	for _, record := range service.records {
 		if record.id == id {
 			jwt = gate.JWT{
@@ -48,4 +51,9 @@ func (service myTokenService) FindOneByID(id string) (jwt gate.JWT, err error) {
 	}
 	err = errTokenNotFound
 	return
+}
+
+// Count returns the number of records
+func (service MyTokenService) Count() int {
+	return len(service.records)
 }

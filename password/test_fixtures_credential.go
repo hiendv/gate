@@ -1,7 +1,6 @@
 package password
 
 type credential struct {
-	id       string
 	email    string
 	password string
 }
@@ -15,6 +14,6 @@ func (record credential) Valid(email, password string) bool {
 }
 
 var credentials = []credential{
-	{id: randomString(8), password: "fooo", email: "foo@local"},
-	{id: randomString(8), password: "barr", email: "bar@local"},
+	{password: "fooo", email: "foo@local"},
+	{password: "barr", email: "bar@local"},
 }

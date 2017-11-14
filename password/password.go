@@ -36,6 +36,11 @@ func New(config Config, handler LoginFunc, container dependency.Container) *Driv
 	return driver
 }
 
+// LoginURL returns the URL to the consent page
+func (auth Driver) LoginURL(state string) (string, error) {
+	return "", errors.New("the driver does not support login URL")
+}
+
 // Login resolves password-based authentication with the given handler and credentials
 func (auth Driver) Login(credentials map[string]string) (user gate.User, err error) {
 	email, ok := credentials["email"]
