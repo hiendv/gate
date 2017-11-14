@@ -4,41 +4,28 @@ import (
 	"testing"
 )
 
+func assertMatch(t *testing.T, matcher Matcher, input, pattern string) {
+	match, err := matcher.Match(input, pattern)
+	if err != nil || !match {
+		t.Fatal("unexpectedly mismatch")
+	}
+}
+
+func assertMismatch(t *testing.T, matcher Matcher, input, pattern string) {
+	match, err := matcher.Match(input, pattern)
+	if err == nil && match {
+		t.Fatal("unexpectedly match")
+	}
+}
+
 func TestMatcher(t *testing.T) {
 	t.Run("matcher", func(t *testing.T) {
-		var match bool
-		var err error
-
 		matcher := NewMatcher()
-
-		match, err = matcher.Match("foobar", "*")
-		if !match || err != nil {
-			t.Fatal("incorrect assertion")
-		}
-
-		match, err = matcher.Match("qux", "*")
-		if !match || err != nil {
-			t.Fatal("incorrect assertion")
-		}
-
-		match, err = matcher.Match("foobar", "foobar")
-		if !match || err != nil {
-			t.Fatal("incorrect assertion")
-		}
-
-		match, err = matcher.Match("foobar", "foobar*")
-		if !match || err != nil {
-			t.Fatal("incorrect assertion")
-		}
-
-		match, err = matcher.Match("qux", "foobar")
-		if err == nil && match {
-			t.Fatal("incorrect assertion")
-		}
-
-		match, err = matcher.Match("qux", "foobar*")
-		if err == nil && match {
-			t.Fatal("incorrect assertion")
-		}
+		assertMatch(t, matcher, "foobar", "*")
+		assertMatch(t, matcher, "qux", "*")
+		assertMatch(t, matcher, "foobar", "foobar")
+		assertMatch(t, matcher, "foobar", "foobar*")
+		assertMismatch(t, matcher, "qux", "foobar")
+		assertMismatch(t, matcher, "qux", "foobar*")
 	})
 }

@@ -1,5 +1,6 @@
 package internal
 
+// Ability is the contract for user abilities to be checked
 type Ability interface {
 	GetAction() string
 	GetObject() string
