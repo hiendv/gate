@@ -76,6 +76,28 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func TestInvalidConfig(t *testing.T) {
+	originDriver := driver
+	driver = New(
+		Config{},
+		driver.handler,
+		driver.Container,
+	)
+
+	if driver != nil {
+		t.Fatal("unexpected non-nil driver")
+	}
+
+	driver = originDriver
+}
+
+func testLoginURL(t *testing.T) {
+	_, err := auth.LoginURL("state")
+	if err == nil {
+		t.Fatal("err should not be nil because of the not supported login URL")
+	}
+}
+
 func testLoginFunc(t *testing.T) {
 	handler := driver.handler
 
@@ -134,7 +156,7 @@ func testValidLogin(t *testing.T) {
 	t.Run("later", func(t *testing.T) {
 		firstUser, err := userService.FindOneByEmail("foo@local")
 		if err != nil {
-			t.Fatalf("err should not be nil because of the existing user: %s", err)
+			t.Fatalf("err should be nil because of the existing user: %s", err)
 		}
 
 		secondUser, err := auth.Login(map[string]string{"email": "foo@local", "password": "fooo"})
@@ -149,13 +171,24 @@ func testValidLogin(t *testing.T) {
 }
 
 func testInvalidLogin(t *testing.T) {
-	_, err := auth.Login(map[string]string{"email": "foo", "password": "barr"})
+	_, err := auth.Login(map[string]string{"password": "barr"})
+	if err == nil {
+		t.Fatalf("err should not be nil because of the missing email")
+	}
+
+	_, err = auth.Login(map[string]string{"email": "foo"})
+	if err == nil {
+		t.Fatalf("err should not be nil because of the missing password")
+	}
+
+	_, err = auth.Login(map[string]string{"email": "foo", "password": "barr"})
 	if err == nil {
 		t.Fatalf("err should not be nil because of the invalid credentials")
 	}
 }
 
 func TestLogin(t *testing.T) {
+	t.Run("login URL", testLoginURL)
 	t.Run("login func", testLoginFunc)
 	t.Run("valid login", testValidLogin)
 	t.Run("invalid login", testInvalidLogin)
@@ -164,12 +197,12 @@ func TestLogin(t *testing.T) {
 func testJWTIssue(t *testing.T) {
 	user, err := userService.FindOneByEmail("foo@local")
 	if err != nil {
-		t.Fatalf("err should not be nil because of the existing user: %s", err)
+		t.Fatalf("err should be nil because of the existing user: %s", err)
 	}
 
 	token, err := auth.IssueJWT(user)
 	if err != nil {
-		t.Fatalf("err should not be nil: %s", err)
+		t.Fatalf("err should be nil: %s", err)
 	}
 
 	if user.GetID() != token.UserID {
@@ -185,12 +218,12 @@ func testJWTIssue(t *testing.T) {
 func testJWTValidateParseAndFetchUser(t *testing.T) {
 	user, err := userService.FindOneByEmail("foo@local")
 	if err != nil {
-		t.Fatalf("err should not be nil because of the existing user: %s", err)
+		t.Fatalf("err should be nil because of the existing user: %s", err)
 	}
 
 	token, err := auth.IssueJWT(user)
 	if err != nil {
-		t.Fatalf("err should not be nil: %s", err)
+		t.Fatalf("err should be nil: %s", err)
 	}
 
 	tokenString, err := auth.ParseJWT(token.Value)
@@ -207,12 +240,12 @@ func testJWTValidateParseAndFetchUser(t *testing.T) {
 func testJWTValidateAuthenticate(t *testing.T) {
 	user, err := userService.FindOneByEmail("foo@local")
 	if err != nil {
-		t.Fatalf("err should not be nil because of the existing user: %s", err)
+		t.Fatalf("err should be nil because of the existing user: %s", err)
 	}
 
 	token, err := auth.IssueJWT(user)
 	if err != nil {
-		t.Fatalf("err should not be nil: %s", err)
+		t.Fatalf("err should be nil: %s", err)
 	}
 
 	_, err = auth.Authenticate(token.Value)
@@ -224,12 +257,12 @@ func testJWTValidateAuthenticate(t *testing.T) {
 func testJWTValidateAuthorize(t *testing.T) {
 	user, err := userService.FindOneByEmail("foo@local")
 	if err != nil {
-		t.Fatalf("err should not be nil because of the existing user: %s", err)
+		t.Fatalf("err should be nil because of the existing user: %s", err)
 	}
 
 	token, err := auth.IssueJWT(user)
 	if err != nil {
-		t.Fatalf("err should not be nil: %s", err)
+		t.Fatalf("err should be nil: %s", err)
 	}
 
 	user, err = auth.Authenticate(token.Value)

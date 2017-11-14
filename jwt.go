@@ -49,6 +49,11 @@ func NewHMACJWTConfig(alg string, key interface{}, expiration time.Duration, ski
 		return
 	}
 
+	if key == nil {
+		err = errors.New("invalid key")
+		return
+	}
+
 	config = JWTConfig{method, key, key, expiration, skipClaimsValidation}
 	return
 }

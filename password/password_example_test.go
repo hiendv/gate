@@ -100,7 +100,7 @@ func ExampleDriver_Login() {
 	})
 
 	auth := New(
-		Config{},
+		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 		func(email, password string) (gate.User, error) {
 			if email == "email@local" && password == "password" {
 				return userService.FindOrCreateOneByEmail(email)
@@ -114,6 +114,10 @@ func ExampleDriver_Login() {
 		},
 		dependency.NewContainer(userService, nil, nil),
 	)
+
+	if auth == nil {
+		return
+	}
 
 	user, err := auth.Login(map[string]string{"email": "email@local", "password": "password"})
 	if err != nil {
