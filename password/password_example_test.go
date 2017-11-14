@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hiendv/gate"
+	"github.com/hiendv/gate/dependency"
 	"github.com/pkg/errors"
 )
 
@@ -35,7 +36,6 @@ func Example() {
 
 	auth = New(
 		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
-		gate.NewDependencies(userService, tokenService, roleService),
 		func(email, password string) (gate.User, error) {
 			if email == "email@local" && password == "password" {
 				return userService.FindOrCreateOneByEmail(email)
@@ -43,6 +43,7 @@ func Example() {
 
 			return nil, errors.New("invalid credentials")
 		},
+		dependency.NewContainer(userService, tokenService, roleService),
 	)
 
 	user, err := auth.Login(map[string]string{"email": "email@local", "password": "password"})
@@ -104,7 +105,6 @@ func ExampleDriver_Login() {
 
 	auth := New(
 		gate.Config{},
-		gate.NewDependencies(userService, nil, nil),
 		func(email, password string) (gate.User, error) {
 			if email == "email@local" && password == "password" {
 				return userService.FindOrCreateOneByEmail(email)
@@ -116,6 +116,7 @@ func ExampleDriver_Login() {
 
 			return nil, errors.New("invalid credentials")
 		},
+		dependency.NewContainer(userService, nil, nil),
 	)
 
 	user, err := auth.Login(map[string]string{"email": "email@local", "password": "password"})
@@ -146,7 +147,6 @@ func ExampleDriver_Login() {
 func ExampleDriver_IssueJWT() {
 	auth := New(
 		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
-		gate.NewDependencies(nil, &myTokenService{}, nil),
 		func(email, password string) (gate.User, error) {
 			if email == "email@local" && password == "password" {
 				return user{"id", "email@local", []string{"role"}}, nil
@@ -154,6 +154,7 @@ func ExampleDriver_IssueJWT() {
 
 			return nil, errors.New("invalid credentials")
 		},
+		dependency.NewContainer(nil, &myTokenService{}, nil),
 	)
 
 	jwtConfig, err := gate.NewHMACJWTConfig("HS256", auth.config.JWTSigningKey(), auth.config.JWTExpiration(), auth.config.JWTSkipClaimsValidation())
@@ -170,7 +171,7 @@ func ExampleDriver_IssueJWT() {
 		return "claims-id"
 	}
 
-	auth.dependencies.SetJWTService(mockedJWTService)
+	auth.Container.SetJWTService(mockedJWTService)
 
 	user, err := auth.Login(map[string]string{"email": "email@local", "password": "password"})
 	if err != nil {
@@ -192,7 +193,8 @@ func ExampleDriver_IssueJWT() {
 func ExampleDriver_Authenticate() {
 	auth := New(
 		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, true),
-		gate.NewDependencies(
+		nil,
+		dependency.NewContainer(
 			&myUserService{
 				[]user{
 					{
@@ -205,7 +207,6 @@ func ExampleDriver_Authenticate() {
 			&myTokenService{},
 			nil,
 		),
-		nil,
 	)
 
 	user, err := auth.Authenticate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiaWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwicm9sZXMiOlsicm9sZSJdfSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDB9.b0gxC2uZRek-SPwHSqyLOoW_DjSYroSivLqJG96Zxl0")

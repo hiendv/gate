@@ -2,6 +2,7 @@ package password
 
 import (
 	"github.com/hiendv/gate"
+	"github.com/hiendv/gate/dependency"
 	"github.com/hiendv/gate/internal"
 	"github.com/pkg/errors"
 )
@@ -11,83 +12,33 @@ type LoginFunc func(email, password string) (gate.User, error)
 
 // Driver is password-based authentication
 type Driver struct {
-	config       gate.Config
-	dependencies *gate.Dependencies
-	handler      LoginFunc
+	dependency.Container
+	config  gate.Config
+	handler LoginFunc
 }
 
 // New is the constructor for Driver
-func New(config gate.Config, dependencies *gate.Dependencies, handler LoginFunc) *Driver {
+func New(config gate.Config, handler LoginFunc, container dependency.Container) *Driver {
+	var driver = &Driver{}
+
+	driver.config = config
+	driver.handler = handler
+
 	jwtConfig, err := gate.NewHMACJWTConfig("HS256", config.JWTSigningKey(), config.JWTExpiration(), config.JWTSkipClaimsValidation())
 	if err != nil {
 		return nil
 	}
 
-	dependencies.SetJWTService(gate.NewJWTService(jwtConfig))
-	dependencies.SetMatcher(internal.NewMatcher())
-	return &Driver{config, dependencies, handler}
+	container.SetJWTService(gate.NewJWTService(jwtConfig))
+	container.SetMatcher(internal.NewMatcher())
+
+	driver.Container = container
+	return driver
 }
 
 // GetConfig returns authentication configuration
 func (auth Driver) GetConfig() gate.Config {
 	return auth.config
-}
-
-// UserService returns user service from the dependencies or throws an error if the service is invalid
-func (auth Driver) UserService() (gate.UserService, error) {
-	if auth.dependencies == nil {
-		return nil, errors.New("invalid dependencies")
-	}
-
-	if auth.dependencies.UserService() == nil {
-		return nil, errors.New("invalid user service")
-	}
-
-	return auth.dependencies.UserService(), nil
-}
-
-// RoleService returns role service from the dependencies or throws an error if the service is invalid
-func (auth Driver) RoleService() (gate.RoleService, error) {
-	if auth.dependencies == nil {
-		return nil, errors.New("invalid dependencies")
-	}
-
-	if auth.dependencies.RoleService() == nil {
-		return nil, errors.New("invalid role service")
-	}
-
-	return auth.dependencies.RoleService(), nil
-}
-
-// TokenService returns token service from the dependencies or throws an error if the service is invalid
-func (auth Driver) TokenService() (gate.TokenService, error) {
-	if auth.dependencies == nil {
-		return nil, errors.New("invalid dependencies")
-	}
-
-	if auth.dependencies.TokenService() == nil {
-		return nil, errors.New("invalid token service")
-	}
-
-	return auth.dependencies.TokenService(), nil
-}
-
-// JWTService returns JWT service from the dependencies or throws an error if the service is invalid
-func (auth Driver) JWTService() (gate.JWTService, error) {
-	if auth.dependencies == nil {
-		return gate.JWTService{}, errors.New("invalid dependencies")
-	}
-
-	return auth.dependencies.JWTService(), nil
-}
-
-// Matcher returns Matcher instance from the dependencies or throws an error if the instance is invalid
-func (auth Driver) Matcher() (internal.Matcher, error) {
-	if auth.dependencies == nil {
-		return internal.Matcher{}, errors.New("invalid dependencies")
-	}
-
-	return auth.dependencies.Matcher(), nil
 }
 
 // Login resolves password-based authentication with the given handler and credentials

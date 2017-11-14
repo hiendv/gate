@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hiendv/gate"
+	"github.com/hiendv/gate/dependency"
 	"github.com/pkg/errors"
 )
 
@@ -60,7 +61,6 @@ func TestMain(m *testing.M) {
 	// prepare for mocking
 	driver = New(
 		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
-		gate.NewDependencies(&userService, &tokenService, &roleService),
 		func(email, password string) (gate.User, error) {
 			for _, record := range credentials {
 				if record.Valid(email, password) {
@@ -70,6 +70,7 @@ func TestMain(m *testing.M) {
 
 			return nil, errors.New("invalid credentials")
 		},
+		dependency.NewContainer(&userService, &tokenService, &roleService),
 	)
 	auth = driver
 
