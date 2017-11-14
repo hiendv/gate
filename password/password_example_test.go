@@ -35,7 +35,7 @@ func Example() {
 	}
 
 	auth = New(
-		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
+		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 		func(email, password string) (gate.User, error) {
 			if email == "email@local" && password == "password" {
 				return userService.FindOrCreateOneByEmail(email)
@@ -104,7 +104,7 @@ func ExampleDriver_Login() {
 	}
 
 	auth := New(
-		gate.Config{},
+		Config{},
 		func(email, password string) (gate.User, error) {
 			if email == "email@local" && password == "password" {
 				return userService.FindOrCreateOneByEmail(email)
@@ -146,7 +146,7 @@ func ExampleDriver_Login() {
 
 func ExampleDriver_IssueJWT() {
 	auth := New(
-		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
+		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 		func(email, password string) (gate.User, error) {
 			if email == "email@local" && password == "password" {
 				return user{"id", "email@local", []string{"role"}}, nil
@@ -192,7 +192,7 @@ func ExampleDriver_IssueJWT() {
 
 func ExampleDriver_Authenticate() {
 	auth := New(
-		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, true),
+		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, true)},
 		nil,
 		dependency.NewContainer(
 			&myUserService{

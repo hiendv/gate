@@ -60,7 +60,7 @@ func TestMain(m *testing.M) {
 
 	// prepare for mocking
 	driver = New(
-		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
+		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 		func(email, password string) (gate.User, error) {
 			for _, record := range credentials {
 				if record.Valid(email, password) {

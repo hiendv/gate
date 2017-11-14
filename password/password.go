@@ -13,12 +13,12 @@ type LoginFunc func(email, password string) (gate.User, error)
 // Driver is password-based authentication
 type Driver struct {
 	dependency.Container
-	config  gate.Config
+	config  Config
 	handler LoginFunc
 }
 
 // New is the constructor for Driver
-func New(config gate.Config, handler LoginFunc, container dependency.Container) *Driver {
+func New(config Config, handler LoginFunc, container dependency.Container) *Driver {
 	var driver = &Driver{}
 
 	driver.config = config
@@ -34,11 +34,6 @@ func New(config gate.Config, handler LoginFunc, container dependency.Container) 
 
 	driver.Container = container
 	return driver
-}
-
-// GetConfig returns authentication configuration
-func (auth Driver) GetConfig() gate.Config {
-	return auth.config
 }
 
 // Login resolves password-based authentication with the given handler and credentials

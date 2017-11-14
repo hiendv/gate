@@ -6,8 +6,6 @@ import (
 
 // Auth is the common interface for authentication and authorization. E.g. PasswordBased, OAuth, etc.
 type Auth interface {
-	GetConfig() Config
-
 	UserService() (UserService, error)
 	RoleService() (RoleService, error)
 	TokenService() (TokenService, error)
