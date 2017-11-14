@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"regexp"
+	"sync"
 	"testing"
 )
 
@@ -25,7 +27,22 @@ func TestMatcher(t *testing.T) {
 		assertMatch(t, matcher, "qux", "*")
 		assertMatch(t, matcher, "foobar", "foobar")
 		assertMatch(t, matcher, "foobar", "foobar*")
+
 		assertMismatch(t, matcher, "qux", "foobar")
 		assertMismatch(t, matcher, "qux", "foobar*")
+
+		assertMismatch(t, matcher, "qux", "(")
+
+		t.Run("with existing expressions", func(t *testing.T) {
+
+			matcher = Matcher{
+				expressions: map[string]*regexp.Regexp{
+					"foobar": nil,
+				},
+				RWMutex: &sync.RWMutex{},
+			}
+
+			assertMismatch(t, matcher, "foobar", "foobar")
+		})
 	})
 }
