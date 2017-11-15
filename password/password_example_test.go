@@ -6,7 +6,7 @@ import (
 
 	"github.com/hiendv/gate"
 	"github.com/hiendv/gate/dependency"
-	"github.com/hiendv/gate/test/fixtures"
+	"github.com/hiendv/gate/internal/test/fixtures"
 	"github.com/pkg/errors"
 )
 
