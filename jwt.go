@@ -41,6 +41,11 @@ type JWT struct {
 	IssuedAt  time.Time
 }
 
+// NewJWTConfig is the constructor for JWTConfig
+func NewJWTConfig(method jwt.SigningMethod, signKey, verifyKey interface{}, expiration time.Duration, skipClaimsValidation bool) JWTConfig {
+	return JWTConfig{method, signKey, verifyKey, expiration, skipClaimsValidation}
+}
+
 // NewHMACJWTConfig is the constructor for JWTConfig using HMAC signing method
 func NewHMACJWTConfig(alg string, key interface{}, expiration time.Duration, skipClaimsValidation bool) (config JWTConfig, err error) {
 	method := jwt.GetSigningMethod(alg)
@@ -54,13 +59,13 @@ func NewHMACJWTConfig(alg string, key interface{}, expiration time.Duration, ski
 		return
 	}
 
-	config = JWTConfig{method, key, key, expiration, skipClaimsValidation}
+	config = NewJWTConfig(method, key, key, expiration, skipClaimsValidation)
 	return
 }
 
 // NewJWTService is the constructor for JWTService
-func NewJWTService(config JWTConfig) JWTService {
-	return JWTService{
+func NewJWTService(config JWTConfig) *JWTService {
+	return &JWTService{
 		config,
 		func() time.Time {
 			return time.Now().Local()
@@ -82,6 +87,11 @@ func (service JWTService) NewTokenFromClaims(claims JWTClaims) (token JWT) {
 
 // Issue generates a token from JWT claims with the service configuration
 func (service JWTService) Issue(claims JWTClaims) (token JWT, err error) {
+	if service.config.method == nil {
+		err = errors.New("invalid JWT signing method")
+		return
+	}
+
 	obj := jwt.NewWithClaims(service.config.method, claims)
 	if obj == nil {
 		err = errors.New("could not create JWT")
@@ -137,6 +147,11 @@ func (service JWTService) Parse(tokenString string) (token JWT, err error) {
 }
 
 func (service JWTService) getSigningKey() (key interface{}, err error) {
+	if service.config.method == nil {
+		err = errors.New("invalid JWT signing method")
+		return
+	}
+
 	switch service.config.method.(type) {
 	default:
 		err = errors.New("invalid key")

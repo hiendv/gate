@@ -9,7 +9,7 @@ type Auth interface {
 	UserService() (UserService, error)
 	RoleService() (RoleService, error)
 	TokenService() (TokenService, error)
-	JWTService() (JWTService, error)
+	JWTService() (*JWTService, error)
 	Matcher() (internal.Matcher, error)
 
 	Login(map[string]string) (User, error)

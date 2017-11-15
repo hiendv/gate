@@ -51,16 +51,20 @@ func (container Container) TokenService() (gate.TokenService, error) {
 }
 
 // JWTService returns JWT service from the services or throws an error if the service is invalid
-func (container Container) JWTService() (gate.JWTService, error) {
+func (container Container) JWTService() (*gate.JWTService, error) {
 	if container.services == nil {
-		return gate.JWTService{}, errors.New("invalid services")
+		return nil, errors.New("invalid services")
+	}
+
+	if container.services.JWTService() == nil {
+		return nil, errors.New("invalid JWT service")
 	}
 
 	return container.services.JWTService(), nil
 }
 
 // SetJWTService is the setter for JWT service
-func (container Container) SetJWTService(service gate.JWTService) {
+func (container Container) SetJWTService(service *gate.JWTService) {
 	container.services.SetJWTService(service)
 }
 

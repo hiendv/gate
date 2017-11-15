@@ -10,7 +10,7 @@ type Services struct {
 	userService  gate.UserService
 	roleService  gate.RoleService
 	tokenService gate.TokenService
-	jwtService   gate.JWTService
+	jwtService   *gate.JWTService
 	matcher      internal.Matcher
 }
 
@@ -30,7 +30,7 @@ func (services Services) TokenService() gate.TokenService {
 }
 
 // JWTService is the getter for JWT service
-func (services Services) JWTService() gate.JWTService {
+func (services Services) JWTService() *gate.JWTService {
 	return services.jwtService
 }
 
@@ -40,7 +40,7 @@ func (services Services) Matcher() internal.Matcher {
 }
 
 // SetJWTService is the setter for JWT service
-func (services *Services) SetJWTService(service gate.JWTService) {
+func (services *Services) SetJWTService(service *gate.JWTService) {
 	services.jwtService = service
 }
 
