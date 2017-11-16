@@ -22,6 +22,11 @@ type MyTokenService struct {
 	records []token
 }
 
+// NewMyTokenService is the constructor for MyTokenService
+func NewMyTokenService(records []token) *MyTokenService {
+	return &MyTokenService{records}
+}
+
 // Store appends the token
 func (service *MyTokenService) Store(jwt gate.JWT) error {
 	service.records = append(service.records, token{
