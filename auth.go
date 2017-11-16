@@ -42,3 +42,8 @@ type TokenService interface {
 	FindOneByID(string) (JWT, error)
 	Store(JWT) error
 }
+
+// HasEmail is the contract for user service entity
+type HasEmail interface {
+	GetEmail() string
+}
