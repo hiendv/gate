@@ -2,6 +2,7 @@ package fixtures
 
 import (
 	"github.com/hiendv/gate"
+	"github.com/pkg/errors"
 )
 
 // Ability is my user ability
@@ -57,5 +58,10 @@ func (service MyRoleService) FindByIDs(ids []string) (roles []gate.Role, err err
 			}
 		}
 	}
+
+	if len(roles) == 0 {
+		err = errors.New("not found")
+	}
+
 	return
 }

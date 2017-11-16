@@ -204,6 +204,7 @@ func TestPasswordJWT(t *testing.T) {
 		t.Run("authorize", func(t *testing.T) {
 			t.Run("for a normal user", func(t *testing.T) {
 				user, err := userService.FindOneByEmail("foo@local")
+				t.Log(user)
 				test.AssertOK(t, err, "existing user")
 
 				token, err := auth.IssueJWT(user)
