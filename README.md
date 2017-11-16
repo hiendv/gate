@@ -1,5 +1,5 @@
 # Gate
-[![Build Status](https://travis-ci.org/hiendv/gate.svg?branch=master)](https://travis-ci.org/hiendv/gate) [![GoDoc](https://godoc.org/github.com/hiendv/gate?status.svg)](https://godoc.org/github.com/hiendv/gate) [![Go Report Card](https://goreportcard.com/badge/github.com/hiendv/gate)](https://goreportcard.com/report/github.com/hiendv/gate)
+[![Build Status](https://travis-ci.org/hiendv/gate.svg?branch=master)](https://travis-ci.org/hiendv/gate) [![GoDoc](https://godoc.org/github.com/hiendv/gate?status.svg)](https://godoc.org/github.com/hiendv/gate) [![Go Report Card](https://goreportcard.com/badge/github.com/hiendv/gate)](https://goreportcard.com/report/github.com/hiendv/gate) [![Coverage Status](https://coveralls.io/repos/github/hiendv/gate/badge.svg?branch=master)](https://coveralls.io/github/hiendv/gate?branch=master)
 
 <p align="center">
 	<img src="bouncer.svg" alt="Golang Gate" title="Golang Gate" />
