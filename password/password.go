@@ -8,7 +8,7 @@ import (
 )
 
 // LoginFunc is the handler of password-based authentication
-type LoginFunc func(email, password string) (gate.User, error)
+type LoginFunc func(email, password string) (gate.HasEmail, error)
 
 // Driver is password-based authentication
 type Driver struct {
@@ -17,22 +17,30 @@ type Driver struct {
 	handler LoginFunc
 }
 
+// LoginFuncStub is the stub for LoginFunc
+var LoginFuncStub LoginFunc = func(string, string) (gate.HasEmail, error) {
+	return nil, nil
+}
+
 // New is the constructor for Driver
 func New(config Config, handler LoginFunc, container dependency.Container) *Driver {
 	var driver = &Driver{}
 
 	driver.config = config
+
+	if handler == nil {
+		return nil
+	}
 	driver.handler = handler
 
 	jwtConfig, err := gate.NewHMACJWTConfig("HS256", config.JWTSigningKey(), config.JWTExpiration(), config.JWTSkipClaimsValidation())
 	if err != nil {
 		return nil
 	}
-
 	container.SetJWTService(gate.NewJWTService(jwtConfig))
 	container.SetMatcher(internal.NewMatcher())
-
 	driver.Container = container
+
 	return driver
 }
 
@@ -55,10 +63,19 @@ func (auth Driver) Login(credentials map[string]string) (user gate.User, err err
 		return
 	}
 
-	user, err = auth.handler(email, password)
+	person, err := auth.handler(email, password)
 	if err != nil {
 		err = errors.Wrap(err, "could not login")
+		return
 	}
+
+	service, err := auth.UserService()
+	if err != nil {
+		err = errors.Wrap(err, "invalid user service")
+		return
+	}
+
+	user, err = service.FindOrCreateOneByEmail(person.GetEmail())
 	return
 }
 

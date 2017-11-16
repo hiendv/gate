@@ -20,28 +20,34 @@ func Example() {
 			Roles: []string{"role-id"},
 		},
 	})
-	tokenService := &fixtures.MyTokenService{}
+	tokenService := fixtures.NewMyTokenService(nil)
 	roleService := fixtures.NewMyRoleService([]fixtures.Role{
 		{
 			ID: "role-id",
 			Abilities: []fixtures.Ability{
-				{"GET", "/api/v1/*"},
-				{"POST", "/api/v1/users*"},
+				{Action: "GET", Object: "/api/v1/*"},
+				{Action: "POST", Object: "/api/v1/users*"},
 			},
 		},
 	})
 
+	account := fixtures.Account{Email: "email@local", Password: "password"}
+
 	auth = New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(email, password string) (gate.User, error) {
-			if email == "email@local" && password == "password" {
-				return userService.FindOrCreateOneByEmail(email)
+		func(email, password string) (gate.HasEmail, error) {
+			if account.Valid(email, password) {
+				return account, nil
 			}
 
 			return nil, errors.New("invalid credentials")
 		},
 		dependency.NewContainer(userService, tokenService, roleService),
 	)
+	if auth == nil {
+		fmt.Println("auth should not be nil")
+		return
+	}
 
 	user, err := auth.Login(map[string]string{"email": "email@local", "password": "password"})
 	if err != nil {
@@ -99,23 +105,27 @@ func ExampleDriver_Login() {
 		},
 	})
 
+	account := fixtures.Account{Email: "email@local", Password: "password"}
+	anotherAccount := fixtures.Account{Email: "email2@local", Password: "password2"}
+
 	auth := New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(email, password string) (gate.User, error) {
-			if email == "email@local" && password == "password" {
-				return userService.FindOrCreateOneByEmail(email)
+		func(email, password string) (gate.HasEmail, error) {
+			if account.Valid(email, password) {
+				return account, nil
 			}
 
-			if email == "email2@local" && password == "password2" {
-				return userService.FindOrCreateOneByEmail(email)
+			if anotherAccount.Valid(email, password) {
+				return anotherAccount, nil
 			}
 
 			return nil, errors.New("invalid credentials")
 		},
+		// Token and Role services are omitted
 		dependency.NewContainer(userService, nil, nil),
 	)
-
 	if auth == nil {
+		fmt.Println("auth should not be nil")
 		return
 	}
 
@@ -145,17 +155,32 @@ func ExampleDriver_Login() {
 }
 
 func ExampleDriver_IssueJWT() {
+	userService := fixtures.NewMyUserService([]fixtures.User{
+		{
+			ID:    "id",
+			Email: "email@local",
+			Roles: []string{"role"},
+		},
+	})
+	tokenService := fixtures.NewMyTokenService(nil)
+	account := fixtures.Account{Email: "email@local", Password: "password"}
+
 	auth := New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(email, password string) (gate.User, error) {
-			if email == "email@local" && password == "password" {
-				return fixtures.User{"id", "email@local", []string{"role"}}, nil
+		func(email, password string) (gate.HasEmail, error) {
+			if account.Valid(email, password) {
+				return account, nil
 			}
 
 			return nil, errors.New("invalid credentials")
 		},
-		dependency.NewContainer(nil, &fixtures.MyTokenService{}, nil),
+		// Role service is omitted
+		dependency.NewContainer(userService, tokenService, nil),
 	)
+	if auth == nil {
+		fmt.Println("auth should not be nil")
+		return
+	}
 
 	jwtConfig, err := gate.NewHMACJWTConfig("HS256", auth.config.JWTSigningKey(), auth.config.JWTExpiration(), auth.config.JWTSkipClaimsValidation())
 	if err != nil {
@@ -191,21 +216,25 @@ func ExampleDriver_IssueJWT() {
 }
 
 func ExampleDriver_Authenticate() {
+	userService := fixtures.NewMyUserService([]fixtures.User{
+		{
+			ID:    "id",
+			Email: "email@local",
+			Roles: []string{},
+		},
+	})
+	tokenService := fixtures.NewMyTokenService(nil)
+
 	auth := New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, true)},
-		nil,
-		dependency.NewContainer(
-			fixtures.NewMyUserService([]fixtures.User{
-				{
-					ID:    "id",
-					Email: "email@local",
-					Roles: []string{},
-				},
-			}),
-			&fixtures.MyTokenService{},
-			nil,
-		),
+		LoginFuncStub,
+		// Role service is omitted
+		dependency.NewContainer(userService, tokenService, nil),
 	)
+	if auth == nil {
+		fmt.Println("auth should not be nil")
+		return
+	}
 
 	user, err := auth.Authenticate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiaWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwicm9sZXMiOlsicm9sZSJdfSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDB9.b0gxC2uZRek-SPwHSqyLOoW_DjSYroSivLqJG96Zxl0")
 	if err != nil {

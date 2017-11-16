@@ -24,20 +24,20 @@ func TestMain(m *testing.M) {
 		{
 			ID: fixtures.RandomString(8),
 			Abilities: []fixtures.Ability{
-				{"GET", "/api/v1/*"},
-				{"POST", "/api/v1/users*"},
+				{Action: "GET", Object: "/api/v1/*"},
+				{Action: "POST", Object: "/api/v1/users*"},
 			},
 		},
 		{
 			ID: fixtures.RandomString(8),
 			Abilities: []fixtures.Ability{
-				{"GET", "*"},
+				{Action: "GET", Object: "*"},
 			},
 		},
 		{
 			ID: fixtures.RandomString(8),
 			Abilities: []fixtures.Ability{
-				{"POST", "/api/v1/posts*"},
+				{Action: "POST", Object: "/api/v1/posts*"},
 			},
 		},
 	}
@@ -59,20 +59,20 @@ func TestMain(m *testing.M) {
 	}
 
 	accounts := []fixtures.Account{
-		{"foo@local", "fooo"},
-		{"bar@local", "barr"},
+		{Email: "foo@local", Password: "fooo"},
+		{Email: "bar@local", Password: "barr"},
 	}
 
 	roleService = fixtures.NewMyRoleService(roles)
 	userService = fixtures.NewMyUserService(users)
-	tokenService = &fixtures.MyTokenService{}
+	tokenService = fixtures.NewMyTokenService(nil)
 
 	auth = New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(email, password string) (gate.User, error) {
+		func(email, password string) (gate.HasEmail, error) {
 			for _, record := range accounts {
 				if record.Valid(email, password) {
-					return userService.FindOrCreateOneByEmail(record.GetEmail())
+					return record, nil
 				}
 			}
 
@@ -80,15 +80,14 @@ func TestMain(m *testing.M) {
 		},
 		dependency.NewContainer(userService, tokenService, roleService),
 	)
+	if auth == nil {
+		os.Exit(1)
+	}
 
 	os.Exit(m.Run())
 }
 
 func TestPasswordLogin(t *testing.T) {
-	if auth == nil {
-		t.Fatal("auth should not be nil")
-	}
-
 	t.Run("login url", func(t *testing.T) {
 		_, err := auth.LoginURL("state")
 		test.AssertErr(t, err, "unsupported login URL")
@@ -185,7 +184,7 @@ func TestPasswordJWT(t *testing.T) {
 			})
 
 			t.Run("invalid user", func(t *testing.T) {
-				token, err := auth.IssueJWT(fixtures.User{"another-id", user.GetEmail(), user.GetRoles()})
+				token, err := auth.IssueJWT(fixtures.User{ID: "another-id", Email: user.GetEmail(), Roles: user.GetRoles()})
 				test.AssertOK(t, err, "valid user")
 
 				_, err = auth.Authenticate(token.Value)
@@ -204,7 +203,6 @@ func TestPasswordJWT(t *testing.T) {
 		t.Run("authorize", func(t *testing.T) {
 			t.Run("for a normal user", func(t *testing.T) {
 				user, err := userService.FindOneByEmail("foo@local")
-				t.Log(user)
 				test.AssertOK(t, err, "existing user")
 
 				token, err := auth.IssueJWT(user)

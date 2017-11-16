@@ -14,50 +14,66 @@ import (
 func TestPasswordInvalidConfig(t *testing.T) {
 	instance := New(
 		Config{},
-		nil,
-		dependency.NewContainer(&fixtures.MyUserService{}, &fixtures.MyTokenService{}, &fixtures.MyRoleService{}),
+		LoginFuncStub,
+		// Services are omitted
+		dependency.NewContainer(nil, nil, nil),
 	)
 
 	if instance != nil {
-		t.Fatal("unexpected non-nil driver")
+		t.Fatal("unexpected nil driver")
+	}
+}
+
+func TestPasswordInvalidHandler(t *testing.T) {
+	instance := New(
+		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		nil,
+		// Services are omitted
+		dependency.NewContainer(nil, nil, nil),
+	)
+
+	if instance != nil {
+		t.Fatal("unexpected nil driver")
 	}
 }
 
 func TestPasswordLoginFunc(t *testing.T) {
+	account := fixtures.Account{Email: "email@local", Password: "password"}
+
 	driver := New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(email, password string) (gate.User, error) {
-			if email == "email@local" && password == "password" {
-				return fixtures.User{}, nil
+		func(email, password string) (gate.HasEmail, error) {
+			if account.Valid(email, password) {
+				return account, nil
 			}
 
 			return nil, errors.New("invalid credentials")
 		},
-		dependency.NewContainer(&fixtures.MyUserService{}, &fixtures.MyTokenService{}, &fixtures.MyRoleService{}),
+		// Token and Role services are omitted
+		dependency.NewContainer(fixtures.NewMyUserService(nil), nil, nil),
 	)
+	if driver == nil {
+		t.Fatal("unexpected non-nil driver")
+	}
 
 	t.Run("valid", func(t *testing.T) {
 		_, err := driver.Login(map[string]string{"email": "email@local", "password": "password"})
-		if err != nil {
-			t.Fatalf("err should be nil because of the valid credentials: %s", err)
-		}
+		test.AssertOK(t, err, "valid credentials")
 	})
 
 	t.Run("invalid", func(t *testing.T) {
 		_, err := driver.Login(map[string]string{"email": "email@local", "password": ""})
-		if err == nil {
-			t.Fatal("err should not be nil because of the invalid credentials")
-		}
+		test.AssertErr(t, err, "invalid credentials")
 	})
 }
 
 func TestPasswordJWTService(t *testing.T) {
 	driver := New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		nil,
-		dependency.NewContainer(&fixtures.MyUserService{}, &fixtures.MyTokenService{}, &fixtures.MyRoleService{}),
+		LoginFuncStub,
+		// User service is omitted
+		dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), fixtures.NewMyRoleService(nil)),
 	)
-
 	if driver == nil {
 		t.Fatal("unexpected nil driver")
 	}
@@ -100,20 +116,20 @@ func TestPasswordJWTService(t *testing.T) {
 		})
 
 		t.Run("with invalid token service", func(t *testing.T) {
-			driver := New(
+			driverWithInvalidTokenService := New(
 				Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-				nil,
-				dependency.NewContainer(&fixtures.MyUserService{}, nil, &fixtures.MyRoleService{}),
+				LoginFuncStub,
+				// User and Role services are omitted
+				dependency.NewContainer(nil, nil, nil),
 			)
-
-			if driver == nil {
+			if driverWithInvalidTokenService == nil {
 				t.Fatal("unexpected nil driver")
 			}
 
-			_, err := driver.TokenService()
+			_, err := driverWithInvalidTokenService.TokenService()
 			test.AssertErr(t, err, "invalid token service")
 
-			_, err = driver.IssueJWT(user)
+			_, err = driverWithInvalidTokenService.IssueJWT(user)
 			test.AssertErr(t, err, "missing token service")
 		})
 	})
@@ -138,19 +154,23 @@ func TestPasswordJWTService(t *testing.T) {
 }
 
 func TestPasswordUserService(t *testing.T) {
-	user := fixtures.User{
-		ID:    fixtures.RandomString(8),
-		Email: "nobody@local",
-		Roles: []string{},
-	}
+	t.Run("with invalid user service", func(t *testing.T) {
+		driver := New(
+			Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+			LoginFuncStub,
+			// Role service is omitted
+			dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), nil),
+		)
+		if driver == nil {
+			t.Fatal("unexpected non-nil driver")
+		}
 
-	t.Run("get user from jwt", func(t *testing.T) {
-		t.Run("with invalid user service", func(t *testing.T) {
-			driver := New(
-				Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-				nil,
-				dependency.NewContainer(nil, &fixtures.MyTokenService{}, &fixtures.MyRoleService{}),
-			)
+		t.Run("get user from jwt", func(t *testing.T) {
+			user := fixtures.User{
+				ID:    fixtures.RandomString(8),
+				Email: "nobody@local",
+				Roles: []string{},
+			}
 
 			if driver == nil {
 				t.Fatal("unexpected nil driver")
@@ -161,6 +181,11 @@ func TestPasswordUserService(t *testing.T) {
 
 			_, err = driver.GetUserFromJWT(token)
 			test.AssertErr(t, err, "missing user service")
+		})
+
+		t.Run("login", func(t *testing.T) {
+			_, err := driver.Login(map[string]string{"email": "email@local", "password": "password"})
+			test.AssertErr(t, err, "invalid credentials")
 		})
 	})
 }
@@ -176,10 +201,10 @@ func TestPasswordRoleService(t *testing.T) {
 		t.Run("with invalid role service", func(t *testing.T) {
 			driver := New(
 				Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-				nil,
-				dependency.NewContainer(&fixtures.MyUserService{}, &fixtures.MyTokenService{}, nil),
+				LoginFuncStub,
+				// User and Token services are omitted
+				dependency.NewContainer(nil, nil, nil),
 			)
-
 			if driver == nil {
 				t.Fatal("unexpected nil driver")
 			}
@@ -191,10 +216,10 @@ func TestPasswordRoleService(t *testing.T) {
 		t.Run("with valid role service", func(t *testing.T) {
 			driver := New(
 				Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-				nil,
-				dependency.NewContainer(&fixtures.MyUserService{}, &fixtures.MyTokenService{}, &fixtures.MyRoleService{}),
+				LoginFuncStub,
+				// User and Token services are omitted
+				dependency.NewContainer(nil, nil, fixtures.NewMyRoleService(nil)),
 			)
-
 			if driver == nil {
 				t.Fatal("unexpected nil driver")
 			}
