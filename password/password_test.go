@@ -67,6 +67,43 @@ func TestPasswordLoginFunc(t *testing.T) {
 	})
 }
 
+func TestPasswordUserService(t *testing.T) {
+	t.Run("with invalid user service", func(t *testing.T) {
+		driver := New(
+			Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+			LoginFuncStub,
+			// Role service is omitted
+			dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), nil),
+		)
+		if driver == nil {
+			t.Fatal("unexpected non-nil driver")
+		}
+
+		t.Run("get user from jwt", func(t *testing.T) {
+			user := fixtures.User{
+				ID:    fixtures.RandomString(8),
+				Email: "nobody@local",
+				Roles: []string{},
+			}
+
+			if driver == nil {
+				t.Fatal("unexpected nil driver")
+			}
+
+			token, err := driver.IssueJWT(user)
+			test.AssertOK(t, err, "valid JWT service")
+
+			_, err = driver.GetUserFromJWT(token)
+			test.AssertErr(t, err, "missing user service")
+		})
+
+		t.Run("login", func(t *testing.T) {
+			_, err := driver.Login(map[string]string{"email": "email@local", "password": "password"})
+			test.AssertErr(t, err, "missing user service")
+		})
+	})
+}
+
 func TestPasswordJWTService(t *testing.T) {
 	driver := New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
@@ -149,43 +186,6 @@ func TestPasswordJWTService(t *testing.T) {
 			driver.SetJWTService(service)
 			_, err = driver.ParseJWT(token.Value)
 			test.AssertOK(t, err, "valid JWT service")
-		})
-	})
-}
-
-func TestPasswordUserService(t *testing.T) {
-	t.Run("with invalid user service", func(t *testing.T) {
-		driver := New(
-			Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-			LoginFuncStub,
-			// Role service is omitted
-			dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), nil),
-		)
-		if driver == nil {
-			t.Fatal("unexpected non-nil driver")
-		}
-
-		t.Run("get user from jwt", func(t *testing.T) {
-			user := fixtures.User{
-				ID:    fixtures.RandomString(8),
-				Email: "nobody@local",
-				Roles: []string{},
-			}
-
-			if driver == nil {
-				t.Fatal("unexpected nil driver")
-			}
-
-			token, err := driver.IssueJWT(user)
-			test.AssertOK(t, err, "valid JWT service")
-
-			_, err = driver.GetUserFromJWT(token)
-			test.AssertErr(t, err, "missing user service")
-		})
-
-		t.Run("login", func(t *testing.T) {
-			_, err := driver.Login(map[string]string{"email": "email@local", "password": "password"})
-			test.AssertErr(t, err, "invalid credentials")
 		})
 	})
 }
