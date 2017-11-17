@@ -61,6 +61,7 @@ func TestMain(m *testing.M) {
 	accounts := []fixtures.Account{
 		{Email: "foo@local", Password: "fooo"},
 		{Email: "bar@local", Password: "barr"},
+		{Email: "empty@local", Password: "empty", EmptyEmail: true},
 	}
 
 	roleService = fixtures.NewMyRoleService(roles)
@@ -122,6 +123,11 @@ func TestPasswordLogin(t *testing.T) {
 			if firstUser.GetID() != secondUser.GetID() {
 				t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
 			}
+		})
+
+		t.Run("empty email", func(t *testing.T) {
+			_, err := auth.Login(map[string]string{"email": "empty@local", "password": "empty"})
+			test.AssertErr(t, err, "empty email")
 		})
 	})
 	t.Run("invalid account", func(t *testing.T) {
