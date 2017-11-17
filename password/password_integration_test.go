@@ -69,7 +69,7 @@ func TestMain(m *testing.M) {
 
 	auth = New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(email, password string) (gate.HasEmail, error) {
+		func(driver Driver, email, password string) (gate.HasEmail, error) {
 			for _, record := range accounts {
 				if record.Valid(email, password) {
 					return record, nil

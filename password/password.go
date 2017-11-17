@@ -8,7 +8,7 @@ import (
 )
 
 // LoginFunc is the handler of password-based authentication
-type LoginFunc func(email, password string) (gate.HasEmail, error)
+type LoginFunc func(driver Driver, email, password string) (gate.HasEmail, error)
 
 // Driver is password-based authentication
 type Driver struct {
@@ -18,7 +18,7 @@ type Driver struct {
 }
 
 // LoginFuncStub is the stub for LoginFunc
-var LoginFuncStub LoginFunc = func(string, string) (gate.HasEmail, error) {
+var LoginFuncStub LoginFunc = func(Driver, string, string) (gate.HasEmail, error) {
 	return nil, nil
 }
 
@@ -63,7 +63,7 @@ func (auth Driver) Login(credentials map[string]string) (user gate.User, err err
 		return
 	}
 
-	person, err := auth.handler(email, password)
+	person, err := auth.handler(auth, email, password)
 	if err != nil {
 		err = errors.Wrap(err, "could not login")
 		return

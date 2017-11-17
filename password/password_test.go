@@ -42,7 +42,7 @@ func TestPasswordLoginFunc(t *testing.T) {
 
 	driver := New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(email, password string) (gate.HasEmail, error) {
+		func(driver Driver, email, password string) (gate.HasEmail, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}

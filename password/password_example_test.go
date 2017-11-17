@@ -35,7 +35,7 @@ func Example() {
 
 	auth = New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(email, password string) (gate.HasEmail, error) {
+		func(driver Driver, email, password string) (gate.HasEmail, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}
@@ -110,7 +110,7 @@ func ExampleDriver_Login() {
 
 	auth := New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(email, password string) (gate.HasEmail, error) {
+		func(driver Driver, email, password string) (gate.HasEmail, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}
@@ -167,7 +167,7 @@ func ExampleDriver_IssueJWT() {
 
 	auth := New(
 		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(email, password string) (gate.HasEmail, error) {
+		func(driver Driver, email, password string) (gate.HasEmail, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}
