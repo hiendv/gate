@@ -75,7 +75,13 @@ func (auth Driver) Login(credentials map[string]string) (user gate.User, err err
 		return
 	}
 
-	user, err = service.FindOrCreateOneByEmail(person.GetEmail())
+	identifier := person.GetEmail()
+	if identifier == "" {
+		err = errors.Wrap(err, "invalid user identifier (email)")
+		return
+	}
+
+	user, err = service.FindOrCreateOneByEmail(identifier)
 	return
 }
 
