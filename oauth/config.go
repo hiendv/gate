@@ -18,6 +18,7 @@ type Config struct {
 	UserAPI      string
 }
 
+// NewGoogleConfig is the constructor for OAuth configuration using Google API
 func NewGoogleConfig(base gate.Config, id, secret, redirectURI string) Config {
 	return Config{
 		base,
@@ -30,6 +31,7 @@ func NewGoogleConfig(base gate.Config, id, secret, redirectURI string) Config {
 	}
 }
 
+// NewFacebookConfig is the constructor for OAuth configuration using Facebook API
 func NewFacebookConfig(base gate.Config, id, secret, redirectURI string) Config {
 	return Config{
 		base,
