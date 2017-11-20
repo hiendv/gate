@@ -53,6 +53,11 @@ func TestMain(m *testing.M) {
 		},
 		{
 			ID:    fixtures.RandomString(8),
+			Email: "bar@local",
+			Roles: []string{},
+		},
+		{
+			ID:    fixtures.RandomString(8),
 			Email: "nobody@local",
 			Roles: []string{},
 		},
@@ -85,6 +90,10 @@ func TestMain(m *testing.M) {
 			},
 			"code3-token": GoogleUser{
 				Email:         "bar@local",
+				EmailVerified: false,
+			},
+			"code4-token": GoogleUser{
+				Email:         "qux@local",
 				EmailVerified: true,
 			},
 		},
@@ -115,9 +124,13 @@ func TestOAuthLogin(t *testing.T) {
 			t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
 		}
 
-		_, err = userService.FindOneByEmail("foo@local")
-		test.AssertOK(t, err, "existing user")
+		_, err = auth.Login(map[string]string{"code": "code3"})
+		test.AssertErr(t, err, "unverified email")
+
+		_, err = auth.Login(map[string]string{"code": "code4"})
+		test.AssertErr(t, err, "non-existing user")
 	})
+
 	t.Run("invalid credentials", func(t *testing.T) {
 		_, err := auth.Login(map[string]string{"state": "barr"})
 		test.AssertErr(t, err, "missing code")

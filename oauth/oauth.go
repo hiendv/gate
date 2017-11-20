@@ -120,7 +120,7 @@ func (auth Driver) Login(credentials map[string]string) (user gate.User, err err
 
 	identifier := person.GetEmail()
 	if identifier == "" {
-		err = errors.Wrap(err, "invalid user identifier (email)")
+		err = errors.New("invalid user identifier (email)")
 		return
 	}
 
@@ -145,7 +145,9 @@ func (auth Driver) IssueJWT(user gate.User) (token gate.JWT, err error) {
 	err = auth.StoreJWT(token)
 	if err != nil {
 		err = errors.Wrap(err, "could not store JWT")
+		return
 	}
+
 	return
 }
 
@@ -169,6 +171,7 @@ func (auth Driver) ParseJWT(tokenString string) (token gate.JWT, err error) {
 	token, err = service.Parse(tokenString)
 	if err != nil {
 		err = errors.Wrap(err, "could not parse token")
+		return
 	}
 
 	return
@@ -185,7 +188,9 @@ func (auth Driver) Authenticate(tokenString string) (user gate.User, err error) 
 	user, err = auth.GetUserFromJWT(token)
 	if err != nil {
 		err = errors.Wrap(err, "could not get the user")
+		return
 	}
+
 	return
 }
 
@@ -204,7 +209,9 @@ func (auth Driver) GetUserFromJWT(token gate.JWT) (user gate.User, err error) {
 	user, err = service.FindOneByID(token.UserID)
 	if err != nil {
 		err = errors.Wrap(err, "could not find the user with the given id")
+		return
 	}
+
 	return
 }
 
