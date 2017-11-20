@@ -30,6 +30,7 @@ type Auth interface {
 type UserService interface {
 	FindOneByID(string) (User, error)
 	FindOrCreateOneByEmail(string) (User, error)
+	FindOneByEmail(string) (User, error)
 }
 
 // RoleService is the contract which offers queries on the role entity

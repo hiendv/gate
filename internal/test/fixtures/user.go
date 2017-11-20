@@ -71,7 +71,18 @@ func (service MyUserService) FindOneByEmail(email string) (u gate.User, err erro
 	return
 }
 
-// FindOrCreateOneByEmail fetches the user with the given email or create a new one if the user doesn't exist
+// CreateOneByEmail creates the user with the given email
+func (service *MyUserService) CreateOneByEmail(email string) (u gate.User, err error) {
+	record := User{
+		ID:    service.GenerateMyUserID(),
+		Email: email,
+	}
+	service.records = append(service.records, record)
+	u = record
+	return
+}
+
+// FindOrCreateOneByEmail fetches the user with the given email or creates a new one if the user doesn't exist
 func (service *MyUserService) FindOrCreateOneByEmail(email string) (u gate.User, err error) {
 	u, err = service.FindOneByEmail(email)
 	if err == nil {
@@ -83,12 +94,6 @@ func (service *MyUserService) FindOrCreateOneByEmail(email string) (u gate.User,
 		return
 	}
 
-	err = nil
-	record := User{
-		ID:    service.GenerateMyUserID(),
-		Email: email,
-	}
-	service.records = append(service.records, record)
-	u = record
+	u, err = service.CreateOneByEmail(email)
 	return
 }
