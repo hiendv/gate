@@ -48,8 +48,8 @@ var GoogleStatelessHandler LoginFunc = func(driver Driver, code, state string) (
 		return
 	}
 	defer func(response *http.Response) {
-		err = response.Body.Close()
-		if err == nil {
+		e := response.Body.Close()
+		if e == nil {
 			return
 		}
 

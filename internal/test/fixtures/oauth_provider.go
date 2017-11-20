@@ -14,17 +14,33 @@ import (
 	"golang.org/x/oauth2"
 )
 
+type contextKey string
+
+const noResponseKey contextKey = "no-response"
+const malformedResponseKey contextKey = "malformed-response"
+
 // OAuthClient is the mocking HTTP client for OAuth driver
 type OAuthClient struct {
+	ctx       context.Context
 	token     *oauth2.Token
 	responses map[string]gate.HasEmail
 }
 
 // Get makes a GET request with the given URL
 func (client OAuthClient) Get(url string) (resp *http.Response, err error) {
+	if noResponse, ok := client.ctx.Value(noResponseKey).(bool); ok && noResponse {
+		return nil, nil
+	}
+
 	if client.token == nil || client.token.AccessToken == "" {
 		err = errors.New("invalid token")
 		return
+	}
+
+	if malformedResponse, ok := client.ctx.Value(malformedResponseKey).(bool); ok && malformedResponse {
+		return &http.Response{
+			Body: ioutil.NopCloser(bytes.NewBufferString("malformed")),
+		}, nil
 	}
 
 	user := client.responses[client.token.AccessToken]
@@ -63,5 +79,30 @@ func (config OAuthProvider) Exchange(ctx context.Context, code string) (*oauth2.
 
 // Client returns an HTTP client using the provided token
 func (config OAuthProvider) Client(ctx context.Context, token *oauth2.Token) internal.HTTPClient {
-	return OAuthClient{token, config.Responses}
+	return OAuthClient{ctx, token, config.Responses}
+}
+
+// BadOAuthProvider is the mocking provider with no client for OAuth driver
+type BadOAuthProvider struct {
+	NoClient          bool
+	NoResponse        bool
+	MalformedResponse bool
+	OAuthProvider
+}
+
+// Client returns an HTTP client using the provided token
+func (config BadOAuthProvider) Client(ctx context.Context, token *oauth2.Token) internal.HTTPClient {
+	if config.NoClient {
+		return nil
+	}
+
+	if config.NoResponse {
+		ctx = context.WithValue(ctx, noResponseKey, true)
+	}
+
+	if config.MalformedResponse {
+		ctx = context.WithValue(ctx, malformedResponseKey, true)
+	}
+
+	return config.OAuthProvider.Client(ctx, token)
 }

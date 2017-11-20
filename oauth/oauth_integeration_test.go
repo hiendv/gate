@@ -78,6 +78,64 @@ func TestMain(m *testing.M) {
 		dependency.NewContainer(userService, tokenService, roleService),
 	)
 
+	auth = driver
+	if auth == nil {
+		os.Exit(1)
+	}
+
+	os.Exit(m.Run())
+}
+
+func TestOAuthWithBadProvider(t *testing.T) {
+	t.Run("login", func(t *testing.T) {
+		t.Run("no client", func(t *testing.T) {
+			driver.setProvider(fixtures.BadOAuthProvider{NoClient: true})
+			_, err := auth.Login(map[string]string{"code": "code", "state": "state"})
+			test.AssertErr(t, err, "no client")
+		})
+
+		t.Run("no response", func(t *testing.T) {
+			driver.setProvider(fixtures.BadOAuthProvider{NoResponse: true})
+			_, err := auth.Login(map[string]string{"code": "code", "state": "state"})
+			test.AssertErr(t, err, "no response")
+		})
+
+		t.Run("malformed response", func(t *testing.T) {
+			driver.setProvider(fixtures.BadOAuthProvider{MalformedResponse: true, OAuthProvider: fixtures.OAuthProvider{}})
+			_, err := auth.Login(map[string]string{"code": "code", "state": "state"})
+			test.AssertErr(t, err, "malformed response")
+		})
+	})
+}
+
+func TestOAuthWithDefaultProvider(t *testing.T) {
+	t.Run("login url", func(t *testing.T) {
+		_, err := auth.LoginURL("state")
+		test.AssertOK(t, err, "supported login URL")
+
+		t.Run("without provider", func(t *testing.T) {
+			provider := driver.provider
+			defer driver.setProvider(provider)
+
+			driver.setProvider(nil)
+
+			_, err := auth.LoginURL("state")
+			test.AssertErr(t, err, "invalid provider")
+		})
+	})
+
+	t.Run("login", func(t *testing.T) {
+		t.Run("invalid credentials", func(t *testing.T) {
+			_, err := auth.Login(map[string]string{"code": "code", "state": "state"})
+			test.AssertErr(t, err, "invalid credentials")
+		})
+	})
+}
+
+func TestOAuthWithMockedProvider(t *testing.T) {
+	provider := driver.provider
+	defer driver.setProvider(provider)
+
 	driver.setProvider(fixtures.OAuthProvider{
 		map[string]gate.HasEmail{
 			"code-token": GoogleUser{
@@ -99,44 +157,32 @@ func TestMain(m *testing.M) {
 		},
 	})
 
-	auth = driver
-	if auth == nil {
-		os.Exit(1)
-	}
+	t.Run("login", func(t *testing.T) {
+		t.Run("valid credentials", func(t *testing.T) {
+			firstUser, err := auth.Login(map[string]string{"code": "code", "state": "state"})
+			test.AssertOK(t, err, "valid credentials")
 
-	os.Exit(m.Run())
-}
+			secondUser, err := auth.Login(map[string]string{"code": "code2", "state": "state"})
+			test.AssertOK(t, err, "valid credentials")
 
-func TestOAuthLogin(t *testing.T) {
-	t.Run("login url", func(t *testing.T) {
-		_, err := auth.LoginURL("state")
-		test.AssertOK(t, err, "supported login URL")
-	})
+			if firstUser.GetID() != secondUser.GetID() {
+				t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
+			}
 
-	t.Run("valid credentials", func(t *testing.T) {
-		firstUser, err := auth.Login(map[string]string{"code": "code", "state": "state"})
-		test.AssertOK(t, err, "valid credentials")
+			_, err = auth.Login(map[string]string{"code": "code3"})
+			test.AssertErr(t, err, "unverified email")
 
-		secondUser, err := auth.Login(map[string]string{"code": "code2", "state": "state"})
-		test.AssertOK(t, err, "valid credentials")
+			_, err = auth.Login(map[string]string{"code": "code4"})
+			test.AssertErr(t, err, "non-existing user")
+		})
 
-		if firstUser.GetID() != secondUser.GetID() {
-			t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
-		}
+		t.Run("invalid credentials", func(t *testing.T) {
+			_, err := auth.Login(map[string]string{"state": "barr"})
+			test.AssertErr(t, err, "missing code")
 
-		_, err = auth.Login(map[string]string{"code": "code3"})
-		test.AssertErr(t, err, "unverified email")
-
-		_, err = auth.Login(map[string]string{"code": "code4"})
-		test.AssertErr(t, err, "non-existing user")
-	})
-
-	t.Run("invalid credentials", func(t *testing.T) {
-		_, err := auth.Login(map[string]string{"state": "barr"})
-		test.AssertErr(t, err, "missing code")
-
-		_, err = auth.Login(map[string]string{"code": "", "state": ""})
-		test.AssertErr(t, err, "invalid credentials")
+			_, err = auth.Login(map[string]string{"code": "", "state": ""})
+			test.AssertErr(t, err, "invalid credentials")
+		})
 	})
 }
 
