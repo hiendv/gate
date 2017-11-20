@@ -28,11 +28,19 @@ type Provider interface {
 }
 
 type DefaultProvider struct {
-	*oauth2.Config
+	config *oauth2.Config
+}
+
+func (provider DefaultProvider) AuthCodeURL(state string, opts ...oauth2.AuthCodeOption) string {
+	return provider.config.AuthCodeURL(state, opts...)
+}
+
+func (provider DefaultProvider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	return provider.config.Exchange(ctx, code)
 }
 
 func (provider DefaultProvider) Client(ctx context.Context, t *oauth2.Token) internal.HTTPClient {
-	return provider.Config.Client(ctx, t)
+	return provider.config.Client(ctx, t)
 }
 
 // LoginFuncStub is the stub for LoginFunc
