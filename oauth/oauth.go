@@ -21,24 +21,29 @@ type Driver struct {
 	provider Provider
 }
 
+// Provider is the OAuth provider
 type Provider interface {
 	AuthCodeURL(state string, opts ...oauth2.AuthCodeOption) string
 	Exchange(ctx context.Context, code string) (*oauth2.Token, error)
 	Client(ctx context.Context, t *oauth2.Token) internal.HTTPClient
 }
 
+// DefaultProvider is the default OAuth provider
 type DefaultProvider struct {
 	config *oauth2.Config
 }
 
+// AuthCodeURL returns a URL to OAuth 2.0 provider's consent page
 func (provider DefaultProvider) AuthCodeURL(state string, opts ...oauth2.AuthCodeOption) string {
 	return provider.config.AuthCodeURL(state, opts...)
 }
 
+// Exchange converts an authorization code into a token
 func (provider DefaultProvider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
 	return provider.config.Exchange(ctx, code)
 }
 
+// Client returns an HTTP client using the provided token
 func (provider DefaultProvider) Client(ctx context.Context, t *oauth2.Token) internal.HTTPClient {
 	return provider.config.Client(ctx, t)
 }
@@ -83,6 +88,7 @@ func (auth *Driver) setProvider(provider Provider) {
 	auth.provider = provider
 }
 
+// LoginURL returns the URL to the consent page
 func (auth Driver) LoginURL(state string) (string, error) {
 	if auth.provider == nil {
 		return "", errors.New("invalid oauth configuration")

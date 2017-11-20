@@ -1,18 +1,21 @@
 package oauth
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
 
 	"github.com/hiendv/gate"
 	"github.com/pkg/errors"
-	"golang.org/x/oauth2"
 )
 
+// GoogleUser is the user from Google API
 type GoogleUser struct {
 	Email         string `json:"email"`
 	EmailVerified bool   `json:"email_verified"`
 }
 
+// GetEmail returns user's email
 func (user GoogleUser) GetEmail() string {
 	if !user.EmailVerified {
 		return ""
@@ -21,15 +24,16 @@ func (user GoogleUser) GetEmail() string {
 	return user.Email
 }
 
+// GoogleStatelessHandler is the stateless login handler using Google API
 var GoogleStatelessHandler LoginFunc = func(driver Driver, code, state string) (account gate.HasEmail, err error) {
 	// State is ignored
 
-	token, err := driver.provider.Exchange(oauth2.NoContext, code)
+	token, err := driver.provider.Exchange(context.TODO(), code)
 	if err != nil {
 		return
 	}
 
-	client := driver.provider.Client(oauth2.NoContext, token)
+	client := driver.provider.Client(context.TODO(), token)
 	if client == nil {
 		err = errors.New("invalid API client")
 		return
@@ -43,7 +47,14 @@ var GoogleStatelessHandler LoginFunc = func(driver Driver, code, state string) (
 		err = errors.New("invalid API response")
 		return
 	}
-	defer response.Body.Close()
+	defer func(response *http.Response) {
+		err = response.Body.Close()
+		if err == nil {
+			return
+		}
+
+		// TODO
+	}(response)
 
 	var user GoogleUser
 	err = json.NewDecoder(response.Body).Decode(&user)
