@@ -15,7 +15,7 @@
 
 ### Supported authentication drivers
 - Password-based authentication
-- OAuth2 (coming soon)
+- OAuth2
 
 ### Installation
 ```bash
@@ -25,15 +25,29 @@ go get github.com/hiendv/gate
 ### Usage
 Quick example to get a taste of Gate
 ```go
-
 var auth gate.Auth
 var user gate.User
 var err error
 
-// some codes go here
+// some construction codes go here
 
-// Login using password-based authentication & Issue the JWT
+// Login using password-based authentication
 user, err = auth.Login(map[string]string{"email": "email", "password": "password"})
+if err != nil {
+	log.Fatal("oops")
+}
+
+// Login using OAuth?
+// Redirect users to the authentication code URL
+url, err := auth.LoginURL("state")
+
+// Receive the code and exchange it
+user, err = auth.Login(map[string]string{"code": "received-code"})
+if err != nil {
+	log.Fatal("oops")
+}
+
+// Issue the JWT for the user
 jwt, err := auth.IssueJWT(user)
 
 // Authenticate with a given JWT
@@ -42,7 +56,8 @@ err = auth.Authorize(user, "action", "object")
 ```
 
 You may want to check these examples and tests:
-- Password-based authentication [examples](https://godoc.org/github.com/hiendv/gate/password#pkg-examples) & [tests](password/password_test.go)
+- Password-based authentication [examples](https://godoc.org/github.com/hiendv/gate/password#pkg-examples), [unit tests](password/password_test.go) & [integration tests](password/password_integration_test.go)
+- OAuth2 authentication [examples](https://godoc.org/github.com/hiendv/gate/oauth#pkg-examples), [unit tests](oauth/oauth_test.go) & [integration tests](oauth/oauth_integration_test.go)
 
 ## Development & Testing
 Please check the [Contributing Guidelines](https://github.com/hiendv/gate/blob/master/CONTRIBUTING.md).
