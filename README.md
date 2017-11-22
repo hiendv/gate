@@ -37,7 +37,7 @@ if err != nil {
 	log.Fatal("oops")
 }
 
-// Login using OAuth?
+// Login using OAuth
 // Redirect users to the authentication code URL
 url, err := auth.LoginURL("state")
 
@@ -49,9 +49,17 @@ if err != nil {
 
 // Issue the JWT for the user
 jwt, err := auth.IssueJWT(user)
+if err != nil {
+	log.Fatal("oops")
+}
 
-// Authenticate with a given JWT
+// Send the JWT to the user and let them use it to authenticate
+// Authenticate a user using JWT
 user, err = auth.Authenticate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiaWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwicm9sZXMiOlsicm9sZSJdfSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDB9.b0gxC2uZRek-SPwHSqyLOoW_DjSYroSivLqJG96Zxl0")
+if err != nil {
+	log.Fatal("oops")
+}
+
 err = auth.Authorize(user, "action", "object")
 ```
 
