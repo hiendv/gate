@@ -15,7 +15,7 @@
 
 ### Supported authentication drivers
 - Password-based authentication
-- OAuth2 (coming soon)
+- OAuth2
 
 ### Installation
 ```bash
@@ -25,24 +25,47 @@ go get github.com/hiendv/gate
 ### Usage
 Quick example to get a taste of Gate
 ```go
-
 var auth gate.Auth
 var user gate.User
 var err error
 
-// some codes go here
+// some construction codes go here
 
-// Login using password-based authentication & Issue the JWT
+// Login using password-based authentication
 user, err = auth.Login(map[string]string{"email": "email", "password": "password"})
-jwt, err := auth.IssueJWT(user)
+if err != nil {
+	log.Fatal("oops")
+}
 
-// Authenticate with a given JWT
+// Login using OAuth
+// Redirect users to the authentication code URL
+url, err := auth.LoginURL("state")
+
+// Receive the code and exchange it
+user, err = auth.Login(map[string]string{"code": "received-code"})
+if err != nil {
+	log.Fatal("oops")
+}
+
+// Issue the JWT for the user
+jwt, err := auth.IssueJWT(user)
+if err != nil {
+	log.Fatal("oops")
+}
+
+// Send the JWT to the user and let them use it to authenticate
+// Authenticate a user using JWT
 user, err = auth.Authenticate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiaWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwicm9sZXMiOlsicm9sZSJdfSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDB9.b0gxC2uZRek-SPwHSqyLOoW_DjSYroSivLqJG96Zxl0")
+if err != nil {
+	log.Fatal("oops")
+}
+
 err = auth.Authorize(user, "action", "object")
 ```
 
 You may want to check these examples and tests:
-- Password-based authentication [examples](https://godoc.org/github.com/hiendv/gate/password#pkg-examples) & [tests](password/password_test.go)
+- Password-based authentication [examples](https://godoc.org/github.com/hiendv/gate/password#pkg-examples), [unit tests](password/password_test.go) & [integration tests](password/password_integration_test.go)
+- OAuth2 authentication [examples](https://godoc.org/github.com/hiendv/gate/oauth#pkg-examples), [unit tests](oauth/oauth_test.go) & [integration tests](oauth/oauth_integration_test.go)
 
 ## Development & Testing
 Please check the [Contributing Guidelines](https://github.com/hiendv/gate/blob/master/CONTRIBUTING.md).
