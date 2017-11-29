@@ -14,11 +14,11 @@ type Container struct {
 // UserService returns user service from the services or throws an error if the service is invalid
 func (container Container) UserService() (gate.UserService, error) {
 	if container.services == nil {
-		return nil, errors.New("invalid services")
+		return nil, errors.New("missing services")
 	}
 
 	if container.services.UserService() == nil {
-		return nil, errors.New("invalid user service")
+		return nil, errors.New("missing user service")
 	}
 
 	return container.services.UserService(), nil
@@ -27,11 +27,11 @@ func (container Container) UserService() (gate.UserService, error) {
 // RoleService returns role service from the services or throws an error if the service is invalid
 func (container Container) RoleService() (gate.RoleService, error) {
 	if container.services == nil {
-		return nil, errors.New("invalid services")
+		return nil, errors.New("missing services")
 	}
 
 	if container.services.RoleService() == nil {
-		return nil, errors.New("invalid role service")
+		return nil, errors.New("missing role service")
 	}
 
 	return container.services.RoleService(), nil
@@ -40,11 +40,11 @@ func (container Container) RoleService() (gate.RoleService, error) {
 // TokenService returns token service from the services or throws an error if the service is invalid
 func (container Container) TokenService() (gate.TokenService, error) {
 	if container.services == nil {
-		return nil, errors.New("invalid services")
+		return nil, errors.New("missing services")
 	}
 
 	if container.services.TokenService() == nil {
-		return nil, errors.New("invalid token service")
+		return nil, errors.New("missing token service")
 	}
 
 	return container.services.TokenService(), nil
@@ -53,11 +53,11 @@ func (container Container) TokenService() (gate.TokenService, error) {
 // JWTService returns JWT service from the services or throws an error if the service is invalid
 func (container Container) JWTService() (*gate.JWTService, error) {
 	if container.services == nil {
-		return nil, errors.New("invalid services")
+		return nil, errors.New("missing services")
 	}
 
 	if container.services.JWTService() == nil {
-		return nil, errors.New("invalid JWT service")
+		return nil, errors.New("missing JWT service")
 	}
 
 	return container.services.JWTService(), nil
@@ -71,7 +71,7 @@ func (container Container) SetJWTService(service *gate.JWTService) {
 // Matcher returns Matcher instance from the services or throws an error if the instance is invalid
 func (container Container) Matcher() (internal.Matcher, error) {
 	if container.services == nil {
-		return internal.Matcher{}, errors.New("invalid services")
+		return internal.Matcher{}, errors.New("missing services")
 	}
 
 	return container.services.Matcher(), nil
