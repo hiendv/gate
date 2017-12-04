@@ -74,7 +74,7 @@ func NewJWTService(config JWTConfig) *JWTService {
 		},
 		func() string {
 			id := xid.New()
-			return hex.EncodeToString([]byte(id[:]))
+			return hex.EncodeToString(id[:])
 		},
 	}
 }
