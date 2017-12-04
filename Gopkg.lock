@@ -26,16 +26,16 @@
   version = "v0.8.0"
 
 [[projects]]
-  name = "github.com/satori/go.uuid"
+  name = "github.com/rs/xid"
   packages = ["."]
-  revision = "879c5887cd475cd7864858769793b2ceb0d44feb"
-  version = "v1.1.0"
+  revision = "02dd45c33376f85d1064355dc790dcc4850596b1"
+  version = "v1.1"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context","context/ctxhttp"]
-  revision = "9dfe39835686865bff950a07b394c12a98ddc811"
+  revision = "a8b9294777976932365dabb6640cf1468d95c70f"
 
 [[projects]]
   branch = "master"
@@ -52,6 +52,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cfae30843b65fc43d06b7552b256fa588e5ece84aae7b0be413ce41c5be87cf6"
+  inputs-digest = "48222c2bc56431e0470c1c6d04f521f1090b0c64da25f821afa0710bf9c6ad9c"
   solver-name = "gps-cdcl"
   solver-version = 1
