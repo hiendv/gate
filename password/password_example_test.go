@@ -212,7 +212,7 @@ func ExampleDriver_IssueJWT() {
 
 	fmt.Printf("%s:%s@%s - %v", jwt.ID, jwt.Value, jwt.UserID, err)
 
-	// Output: claims-id:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiaWQiLCJlbWFpbCI6ImVtYWlsQGxvY2FsIiwicm9sZXMiOlsicm9sZSJdfSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDB9.aCp3Bx6aH48sYAeCSXhQyXGAYTiyr9VSkC3mT7dmUeE@id - <nil>
+	// Output: claims-id:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGxvY2FsIiwicm9sZXMiOlsicm9sZSJdLCJleHAiOjE2MDUwNTI4MDAsImp0aSI6ImNsYWltcy1pZCIsImlhdCI6MTYwNTA0OTIwMCwic3ViIjoiaWQifQ.wRouDwptboRBSK-bXHugYeorWGy7pfUHstH_jEHKl_4@id - <nil>
 }
 
 func ExampleDriver_Authenticate() {
@@ -236,7 +236,7 @@ func ExampleDriver_Authenticate() {
 		return
 	}
 
-	user, err := auth.Authenticate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiaWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwicm9sZXMiOlsicm9sZSJdfSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDB9.b0gxC2uZRek-SPwHSqyLOoW_DjSYroSivLqJG96Zxl0")
+	user, err := auth.Authenticate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGxvY2FsIiwicm9sZXMiOlsicm9sZSJdLCJleHAiOjE2MDUwNTI4MDAsImp0aSI6ImNsYWltcy1pZCIsImlhdCI6MTYwNTA0OTIwMCwic3ViIjoiaWQifQ.wRouDwptboRBSK-bXHugYeorWGy7pfUHstH_jEHKl_4")
 	if err != nil {
 		fmt.Println(err)
 		return

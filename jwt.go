@@ -3,11 +3,12 @@ package gate
 import (
 	"crypto/ecdsa"
 	"crypto/rsa"
+	"encoding/hex"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
-	"github.com/satori/go.uuid"
+	"github.com/rs/xid"
 )
 
 // JWTService is the service which manages JWTs
@@ -28,7 +29,8 @@ type JWTConfig struct {
 
 // JWTClaims are JWT claims with user's information
 type JWTClaims struct {
-	User UserInfo `json:"user"`
+	Email string   `json:"email"`
+	Roles []string `json:"roles"`
 	jwt.StandardClaims
 }
 
@@ -71,7 +73,8 @@ func NewJWTService(config JWTConfig) *JWTService {
 			return time.Now().Local()
 		},
 		func() string {
-			return uuid.NewV4().String()
+			id := xid.New()
+			return hex.EncodeToString([]byte(id[:]))
 		},
 	}
 }
@@ -79,7 +82,7 @@ func NewJWTService(config JWTConfig) *JWTService {
 // NewTokenFromClaims constructs a token from JWT claims
 func (service JWTService) NewTokenFromClaims(claims JWTClaims) (token JWT) {
 	token.ID = claims.Id
-	token.UserID = claims.User.ID
+	token.UserID = claims.Subject
 	token.ExpiredAt = time.Unix(claims.ExpiresAt, 0)
 	token.IssuedAt = time.Unix(claims.IssuedAt, 0)
 	return
@@ -261,15 +264,13 @@ func (service JWTService) getVerifyingKey(token *jwt.Token) (key interface{}, er
 // NewClaims generates JWTClaims for a specific user
 func (service JWTService) NewClaims(user User) JWTClaims {
 	return JWTClaims{
-		User: UserInfo{
-			ID:    user.GetID(),
-			Email: user.GetEmail(),
-			Roles: user.GetRoles(),
-		},
+		Email: user.GetEmail(),
+		Roles: user.GetRoles(),
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: service.Now().Add(service.config.expiration).Unix(),
 			IssuedAt:  service.Now().Unix(),
 			Id:        service.GenerateClaimsID(),
+			Subject:   user.GetID(),
 		},
 	}
 }

@@ -55,7 +55,7 @@ if err != nil {
 
 // Send the JWT to the user and let them use it to authenticate
 // Authenticate a user using JWT
-user, err = auth.Authenticate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiaWQiLCJ1c2VybmFtZSI6InVzZXJuYW1lIiwicm9sZXMiOlsicm9sZSJdfSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDB9.b0gxC2uZRek-SPwHSqyLOoW_DjSYroSivLqJG96Zxl0")
+user, err = auth.Authenticate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGxvY2FsIiwicm9sZXMiOlsicm9sZSJdLCJleHAiOjE2MDUwNTI4MDAsImp0aSI6ImNsYWltcy1pZCIsImlhdCI6MTYwNTA0OTIwMCwic3ViIjoiaWQifQ.wRouDwptboRBSK-bXHugYeorWGy7pfUHstH_jEHKl_4")
 if err != nil {
 	log.Fatal("oops")
 }
@@ -80,4 +80,4 @@ Issues and PRs are welcome !
 
 Big thanks to:
 - [dgrijalva/jwt-go](https://github.com/dgrijalva/jwt-go) for the enormous help dealing with JWT works
-- [satori/go.uuid](https://github.com/satori/go.uuid) for the claims ID generator
+- [rs/xid](https://github.com/rs/xid) for the claims ID generator
