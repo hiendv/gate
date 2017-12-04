@@ -17,10 +17,3 @@ type UserAbility interface {
 	GetAction() string
 	GetObject() string
 }
-
-// UserInfo is the user information entity
-type UserInfo struct {
-	ID    string   `json:"id"`
-	Email string   `json:"email"`
-	Roles []string `json:"roles"`
-}
