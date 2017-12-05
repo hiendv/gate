@@ -1,4 +1,4 @@
-package password
+package password_test
 
 import (
 	"os"
@@ -9,6 +9,7 @@ import (
 	"github.com/hiendv/gate/dependency"
 	"github.com/hiendv/gate/internal/test"
 	"github.com/hiendv/gate/internal/test/fixtures"
+	"github.com/hiendv/gate/password"
 	"github.com/pkg/errors"
 )
 
@@ -68,9 +69,9 @@ func TestMain(m *testing.M) {
 	userService = fixtures.NewMyUserService(users)
 	tokenService = fixtures.NewMyTokenService(nil)
 
-	auth = New(
-		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(driver Driver, email, password string) (gate.HasEmail, error) {
+	auth = password.New(
+		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		func(driver password.Driver, email, password string) (gate.HasEmail, error) {
 			for _, record := range accounts {
 				if record.Valid(email, password) {
 					return record, nil

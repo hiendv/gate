@@ -1,4 +1,4 @@
-package password
+package password_test
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"github.com/hiendv/gate"
 	"github.com/hiendv/gate/dependency"
 	"github.com/hiendv/gate/internal/test/fixtures"
+	"github.com/hiendv/gate/password"
 	"github.com/pkg/errors"
 )
 
@@ -33,9 +34,9 @@ func Example() {
 
 	account := fixtures.Account{Email: "email@local", Password: "password"}
 
-	auth = New(
-		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(driver Driver, email, password string) (gate.HasEmail, error) {
+	auth = password.New(
+		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		func(driver password.Driver, email, password string) (gate.HasEmail, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}
@@ -108,9 +109,9 @@ func ExampleDriver_Login() {
 	account := fixtures.Account{Email: "email@local", Password: "password"}
 	anotherAccount := fixtures.Account{Email: "email2@local", Password: "password2"}
 
-	auth := New(
-		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(driver Driver, email, password string) (gate.HasEmail, error) {
+	auth := password.New(
+		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		func(driver password.Driver, email, password string) (gate.HasEmail, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}
@@ -164,10 +165,11 @@ func ExampleDriver_IssueJWT() {
 	})
 	tokenService := fixtures.NewMyTokenService(nil)
 	account := fixtures.Account{Email: "email@local", Password: "password"}
+	config := password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)}
 
-	auth := New(
-		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(driver Driver, email, password string) (gate.HasEmail, error) {
+	auth := password.New(
+		config,
+		func(driver password.Driver, email, password string) (gate.HasEmail, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}
@@ -182,7 +184,7 @@ func ExampleDriver_IssueJWT() {
 		return
 	}
 
-	jwtConfig, err := gate.NewHMACJWTConfig("HS256", auth.config.JWTSigningKey(), auth.config.JWTExpiration(), auth.config.JWTSkipClaimsValidation())
+	jwtConfig, err := gate.NewHMACJWTConfig("HS256", config.JWTSigningKey(), config.JWTExpiration(), config.JWTSkipClaimsValidation())
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -225,9 +227,9 @@ func ExampleDriver_Authenticate() {
 	})
 	tokenService := fixtures.NewMyTokenService(nil)
 
-	auth := New(
-		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, true)},
-		LoginFuncStub,
+	auth := password.New(
+		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, true)},
+		password.LoginFuncStub,
 		// Role service is omitted
 		dependency.NewContainer(userService, tokenService, nil),
 	)

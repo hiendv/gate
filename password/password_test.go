@@ -1,4 +1,4 @@
-package password
+package password_test
 
 import (
 	"testing"
@@ -8,13 +8,14 @@ import (
 	"github.com/hiendv/gate/dependency"
 	"github.com/hiendv/gate/internal/test"
 	"github.com/hiendv/gate/internal/test/fixtures"
+	"github.com/hiendv/gate/password"
 	"github.com/pkg/errors"
 )
 
 func TestPasswordInvalidConfig(t *testing.T) {
-	instance := New(
-		Config{},
-		LoginFuncStub,
+	instance := password.New(
+		password.Config{},
+		password.LoginFuncStub,
 		// Services are omitted
 		dependency.NewContainer(nil, nil, nil),
 	)
@@ -25,8 +26,8 @@ func TestPasswordInvalidConfig(t *testing.T) {
 }
 
 func TestPasswordInvalidHandler(t *testing.T) {
-	instance := New(
-		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+	instance := password.New(
+		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 		nil,
 		// Services are omitted
 		dependency.NewContainer(nil, nil, nil),
@@ -40,9 +41,9 @@ func TestPasswordInvalidHandler(t *testing.T) {
 func TestPasswordLoginFunc(t *testing.T) {
 	account := fixtures.Account{Email: "email@local", Password: "password"}
 
-	driver := New(
-		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(driver Driver, email, password string) (gate.HasEmail, error) {
+	driver := password.New(
+		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		func(driver password.Driver, email, password string) (gate.HasEmail, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}
@@ -69,9 +70,9 @@ func TestPasswordLoginFunc(t *testing.T) {
 
 func TestPasswordUserService(t *testing.T) {
 	t.Run("with invalid user service", func(t *testing.T) {
-		driver := New(
-			Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-			LoginFuncStub,
+		driver := password.New(
+			password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+			password.LoginFuncStub,
 			// Role service is omitted
 			dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), nil),
 		)
@@ -105,9 +106,9 @@ func TestPasswordUserService(t *testing.T) {
 }
 
 func TestPasswordJWTService(t *testing.T) {
-	driver := New(
-		Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		LoginFuncStub,
+	driver := password.New(
+		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		password.LoginFuncStub,
 		// User service is omitted
 		dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), fixtures.NewMyRoleService(nil)),
 	)
@@ -153,9 +154,9 @@ func TestPasswordJWTService(t *testing.T) {
 		})
 
 		t.Run("with invalid token service", func(t *testing.T) {
-			driverWithInvalidTokenService := New(
-				Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-				LoginFuncStub,
+			driverWithInvalidTokenService := password.New(
+				password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+				password.LoginFuncStub,
 				// User and Role services are omitted
 				dependency.NewContainer(nil, nil, nil),
 			)
@@ -199,9 +200,9 @@ func TestPasswordRoleService(t *testing.T) {
 
 	t.Run("get user abilities", func(t *testing.T) {
 		t.Run("with invalid role service", func(t *testing.T) {
-			driver := New(
-				Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-				LoginFuncStub,
+			driver := password.New(
+				password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+				password.LoginFuncStub,
 				// User and Token services are omitted
 				dependency.NewContainer(nil, nil, nil),
 			)
@@ -214,9 +215,9 @@ func TestPasswordRoleService(t *testing.T) {
 		})
 
 		t.Run("with valid role service", func(t *testing.T) {
-			driver := New(
-				Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-				LoginFuncStub,
+			driver := password.New(
+				password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+				password.LoginFuncStub,
 				// User and Token services are omitted
 				dependency.NewContainer(nil, nil, fixtures.NewMyRoleService(nil)),
 			)
