@@ -59,7 +59,8 @@ func New(config Config, handler LoginFunc, container dependency.Container) *Driv
 
 	driver.config = config
 	driver.setProvider(DefaultProvider{
-		&oauth2.Config{ClientID: config.ClientID,
+		&oauth2.Config{
+			ClientID:     config.ClientID,
 			ClientSecret: config.ClientSecret,
 			RedirectURL:  config.RedirectURI,
 			Scopes:       config.Scopes,
@@ -129,69 +130,23 @@ func (auth Driver) Login(credentials map[string]string) (user gate.User, err err
 }
 
 // IssueJWT issues and stores a JWT for a specific user
-func (auth Driver) IssueJWT(user gate.User) (token gate.JWT, err error) {
-	service, err := auth.JWTService()
-	if err != nil {
-		return
-	}
-
-	claims := service.NewClaims(user)
-	token, err = service.Issue(claims)
-	if err != nil {
-		err = errors.Wrap(err, "could not issue JWT")
-		return
-	}
-
-	err = auth.StoreJWT(token)
-	if err != nil {
-		err = errors.Wrap(err, "could not store JWT")
-		return
-	}
-
-	return
-}
-
-// StoreJWT stores a JWT using the given token service
-func (auth Driver) StoreJWT(token gate.JWT) (err error) {
-	service, err := auth.TokenService()
-	if err != nil {
-		return
-	}
-
-	return service.Store(token)
+func (auth Driver) IssueJWT(user gate.User) (gate.JWT, error) {
+	return gate.IssueJWT(auth, user)
 }
 
 // ParseJWT parses a JWT string to a JWT
-func (auth Driver) ParseJWT(tokenString string) (token gate.JWT, err error) {
-	service, err := auth.JWTService()
-	if err != nil {
-		return
-	}
-
-	token, err = service.Parse(tokenString)
-	if err != nil {
-		err = errors.Wrap(err, "could not parse token")
-		return
-	}
-
-	return
+func (auth Driver) ParseJWT(tokenString string) (gate.JWT, error) {
+	return gate.ParseJWT(auth, tokenString)
 }
 
 // Authenticate performs the authentication using JWT
-func (auth Driver) Authenticate(tokenString string) (user gate.User, err error) {
-	token, err := auth.ParseJWT(tokenString)
-	if err != nil {
-		err = errors.Wrap(err, "could not parse the token")
-		return
-	}
+func (auth Driver) Authenticate(tokenString string) (gate.User, error) {
+	return gate.Authenticate(auth, tokenString)
+}
 
-	user, err = auth.GetUserFromJWT(token)
-	if err != nil {
-		err = errors.Wrap(err, "could not get the user")
-		return
-	}
-
-	return
+// GetUserFromJWT returns a user from a given JWT
+func (auth Driver) GetUserFromJWT(token gate.JWT) (user gate.User, err error) {
+	return gate.GetUserFromJWT(auth, token)
 }
 
 // Authorize performs the authorization when a given user takes an action on an object using RBAC
@@ -199,42 +154,7 @@ func (auth Driver) Authorize(user gate.User, action, object string) (err error) 
 	return gate.Authorize(auth, user, action, object)
 }
 
-// GetUserFromJWT returns a user from a given JWT
-func (auth Driver) GetUserFromJWT(token gate.JWT) (user gate.User, err error) {
-	service, err := auth.UserService()
-	if err != nil {
-		return
-	}
-
-	user, err = service.FindOneByID(token.UserID)
-	if err != nil {
-		err = errors.Wrap(err, "could not find the user with the given id")
-		return
-	}
-
-	return
-}
-
 // GetUserAbilities returns a user's abilities
 func (auth Driver) GetUserAbilities(user gate.User) (abilities []gate.UserAbility, err error) {
-	roleIDs := user.GetRoles()
-	if len(roleIDs) == 0 {
-		return
-	}
-
-	service, err := auth.RoleService()
-	if err != nil {
-		return
-	}
-
-	roles, err := service.FindByIDs(roleIDs)
-	if err != nil {
-		err = errors.Wrap(err, "could not fetch roles")
-		return
-	}
-
-	for _, role := range roles {
-		abilities = append(abilities, role.GetAbilities()...)
-	}
-	return
+	return gate.GetUserAbilities(auth, user)
 }

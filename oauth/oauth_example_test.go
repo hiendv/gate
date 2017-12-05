@@ -304,7 +304,7 @@ func ExampleDriver_Authenticate() {
 	userService := fixtures.NewMyUserService(users)
 	tokenService := fixtures.NewMyTokenService(nil)
 
-	driver := New(
+	auth := New(
 		NewGoogleConfig(
 			gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, true),
 			"google-client-id",
@@ -315,12 +315,12 @@ func ExampleDriver_Authenticate() {
 		// Role service is omitted
 		dependency.NewContainer(userService, tokenService, nil),
 	)
-	if driver == nil {
-		fmt.Println("driver should not be nil")
+	if auth == nil {
+		fmt.Println("auth should not be nil")
 		return
 	}
 
-	user, err := driver.Authenticate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImZvb0Bsb2NhbCIsInJvbGVzIjpbXSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDAsInN1YiI6ImlkIn0.W11In6qyrtGdZ_XD3eOJBpd5qwruJE-F3ACstvUcagI")
+	user, err := auth.Authenticate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImZvb0Bsb2NhbCIsInJvbGVzIjpbXSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDAsInN1YiI6ImlkIn0.W11In6qyrtGdZ_XD3eOJBpd5qwruJE-F3ACstvUcagI")
 	if err != nil {
 		fmt.Println(err)
 		return

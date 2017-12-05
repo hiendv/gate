@@ -88,6 +88,9 @@ func TestMain(m *testing.M) {
 
 func TestOAuthWithBadProvider(t *testing.T) {
 	t.Run("login", func(t *testing.T) {
+		provider := driver.provider
+		defer driver.setProvider(provider)
+
 		t.Run("no client", func(t *testing.T) {
 			driver.setProvider(fixtures.BadOAuthProvider{NoClient: true})
 			_, err := auth.Login(map[string]string{"code": "code", "state": "state"})

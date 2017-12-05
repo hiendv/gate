@@ -17,12 +17,11 @@ type Auth interface {
 
 	IssueJWT(User) (JWT, error)
 	ParseJWT(string) (JWT, error)
-	StoreJWT(JWT) error
 
 	Authenticate(string) (User, error)
-	Authorize(User, string, string) error
-
 	GetUserFromJWT(JWT) (User, error)
+
+	Authorize(User, string, string) error
 	GetUserAbilities(User) ([]UserAbility, error)
 }
 

@@ -32,6 +32,30 @@ func Authorize(auth Auth, user User, action, object string) (err error) {
 	return
 }
 
+// GetUserAbilities returns a user's abilities
+func GetUserAbilities(auth Auth, user User) (abilities []UserAbility, err error) {
+	roleIDs := user.GetRoles()
+	if len(roleIDs) == 0 {
+		return
+	}
+
+	service, err := auth.RoleService()
+	if err != nil {
+		return
+	}
+
+	roles, err := service.FindByIDs(roleIDs)
+	if err != nil {
+		err = errors.Wrap(err, "could not fetch roles")
+		return
+	}
+
+	for _, role := range roles {
+		abilities = append(abilities, role.GetAbilities()...)
+	}
+	return
+}
+
 func authorizationCheck(auth Auth, action, object string, abilities []UserAbility) bool {
 	matcher, err := auth.Matcher()
 	if err != nil {
