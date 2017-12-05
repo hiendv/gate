@@ -54,7 +54,8 @@ if err != nil {
 }
 
 // Send the JWT to the user and let them use it to authenticate
-// Authenticate a user using JWT
+
+// Authenticate a user using a given JWT
 user, err = auth.Authenticate("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVtYWlsQGxvY2FsIiwicm9sZXMiOlsicm9sZSJdLCJleHAiOjE2MDUwNTI4MDAsImp0aSI6ImNsYWltcy1pZCIsImlhdCI6MTYwNTA0OTIwMCwic3ViIjoiaWQifQ.wRouDwptboRBSK-bXHugYeorWGy7pfUHstH_jEHKl_4")
 if err != nil {
 	log.Fatal("oops")
