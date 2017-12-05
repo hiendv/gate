@@ -1,4 +1,4 @@
-package oauth
+package oauth_test
 
 import (
 	"testing"
@@ -8,13 +8,14 @@ import (
 	"github.com/hiendv/gate/dependency"
 	"github.com/hiendv/gate/internal/test"
 	"github.com/hiendv/gate/internal/test/fixtures"
+	"github.com/hiendv/gate/oauth"
 	"github.com/pkg/errors"
 )
 
 func TestOAuthInvalidConfig(t *testing.T) {
-	instance := New(
-		Config{},
-		LoginFuncStub,
+	instance := oauth.New(
+		oauth.Config{},
+		oauth.LoginFuncStub,
 		// Services are omitted
 		dependency.NewContainer(nil, nil, nil),
 	)
@@ -25,8 +26,8 @@ func TestOAuthInvalidConfig(t *testing.T) {
 }
 
 func TestOAuthInvalidHandler(t *testing.T) {
-	instance := New(
-		NewGoogleConfig(
+	instance := oauth.New(
+		oauth.NewGoogleConfig(
 			gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 			"client-id",
 			"client-secret",
@@ -43,16 +44,16 @@ func TestOAuthInvalidHandler(t *testing.T) {
 }
 
 func TestOAuthLoginFunc(t *testing.T) {
-	driver := New(
-		NewGoogleConfig(
+	driver := oauth.New(
+		oauth.NewGoogleConfig(
 			gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 			"client-id",
 			"client-secret",
 			"http://localhost:8080",
 		),
-		func(driver Driver, code, state string) (gate.HasEmail, error) {
+		func(driver oauth.Driver, code, state string) (gate.HasEmail, error) {
 			if code == "code" && state == "state" {
-				return GoogleUser{Email: "email@gmail.com", EmailVerified: true}, nil
+				return oauth.GoogleUser{Email: "email@gmail.com", EmailVerified: true}, nil
 			}
 
 			return nil, errors.New("invalid credentials")
@@ -85,14 +86,14 @@ func TestOAuthLoginFunc(t *testing.T) {
 
 func TestOAuthUserService(t *testing.T) {
 	t.Run("with invalid user service", func(t *testing.T) {
-		driver := New(
-			NewFacebookConfig(
+		driver := oauth.New(
+			oauth.NewFacebookConfig(
 				gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 				"client-id",
 				"client-secret",
 				"http://localhost:8080",
 			),
-			LoginFuncStub,
+			oauth.LoginFuncStub,
 			// Role service is omitted
 			dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), nil),
 		)
@@ -126,14 +127,14 @@ func TestOAuthUserService(t *testing.T) {
 }
 
 func TestPasswordJWTService(t *testing.T) {
-	driver := New(
-		NewFacebookConfig(
+	driver := oauth.New(
+		oauth.NewFacebookConfig(
 			gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 			"client-id",
 			"client-secret",
 			"http://localhost:8080",
 		),
-		LoginFuncStub,
+		oauth.LoginFuncStub,
 		// User service is omitted
 		dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), fixtures.NewMyRoleService(nil)),
 	)
@@ -179,14 +180,14 @@ func TestPasswordJWTService(t *testing.T) {
 		})
 
 		t.Run("with invalid token service", func(t *testing.T) {
-			driverWithInvalidTokenService := New(
-				NewFacebookConfig(
+			driverWithInvalidTokenService := oauth.New(
+				oauth.NewFacebookConfig(
 					gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 					"client-id",
 					"client-secret",
 					"http://localhost:8080",
 				),
-				LoginFuncStub,
+				oauth.LoginFuncStub,
 				// User and Role services are omitted
 				dependency.NewContainer(nil, nil, nil),
 			)
@@ -230,14 +231,14 @@ func TestOAuthRoleService(t *testing.T) {
 
 	t.Run("get user abilities", func(t *testing.T) {
 		t.Run("with invalid role service", func(t *testing.T) {
-			driver := New(
-				NewFacebookConfig(
+			driver := oauth.New(
+				oauth.NewFacebookConfig(
 					gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 					"client-id",
 					"client-secret",
 					"http://localhost:8080",
 				),
-				LoginFuncStub,
+				oauth.LoginFuncStub,
 				// User and Token services are omitted
 				dependency.NewContainer(nil, nil, nil),
 			)
@@ -250,14 +251,14 @@ func TestOAuthRoleService(t *testing.T) {
 		})
 
 		t.Run("with valid role service", func(t *testing.T) {
-			driver := New(
-				NewFacebookConfig(
+			driver := oauth.New(
+				oauth.NewFacebookConfig(
 					gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 					"client-id",
 					"client-secret",
 					"http://localhost:8080",
 				),
-				LoginFuncStub,
+				oauth.LoginFuncStub,
 				// User and Token services are omitted
 				dependency.NewContainer(nil, nil, fixtures.NewMyRoleService(nil)),
 			)

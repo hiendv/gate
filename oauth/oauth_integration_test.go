@@ -1,4 +1,4 @@
-package oauth
+package oauth_test
 
 import (
 	"os"
@@ -9,11 +9,12 @@ import (
 	"github.com/hiendv/gate/dependency"
 	"github.com/hiendv/gate/internal/test"
 	"github.com/hiendv/gate/internal/test/fixtures"
+	"github.com/hiendv/gate/oauth"
 )
 
 var (
 	auth         gate.Auth
-	driver       *Driver
+	driver       *oauth.Driver
 	userService  *fixtures.MyUserService
 	tokenService *fixtures.MyTokenService
 	roleService  *fixtures.MyRoleService
@@ -67,14 +68,14 @@ func TestMain(m *testing.M) {
 	userService = fixtures.NewMyUserService(users)
 	tokenService = fixtures.NewMyTokenService(nil)
 
-	driver = New(
-		NewGoogleConfig(
+	driver = oauth.New(
+		oauth.NewGoogleConfig(
 			gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 			"client-id",
 			"client-secret",
 			"http://localhost:8080",
 		),
-		GoogleStatelessHandler,
+		oauth.GoogleStatelessHandler,
 		dependency.NewContainer(userService, tokenService, roleService),
 	)
 
@@ -88,23 +89,23 @@ func TestMain(m *testing.M) {
 
 func TestOAuthWithBadProvider(t *testing.T) {
 	t.Run("login", func(t *testing.T) {
-		provider := driver.provider
-		defer driver.setProvider(provider)
+		provider := driver.GetProvider()
+		defer driver.SetProvider(provider)
 
 		t.Run("no client", func(t *testing.T) {
-			driver.setProvider(fixtures.BadOAuthProvider{NoClient: true})
+			driver.SetProvider(fixtures.BadOAuthProvider{NoClient: true})
 			_, err := auth.Login(map[string]string{"code": "code", "state": "state"})
 			test.AssertErr(t, err, "no client")
 		})
 
 		t.Run("no response", func(t *testing.T) {
-			driver.setProvider(fixtures.BadOAuthProvider{NoResponse: true})
+			driver.SetProvider(fixtures.BadOAuthProvider{NoResponse: true})
 			_, err := auth.Login(map[string]string{"code": "code", "state": "state"})
 			test.AssertErr(t, err, "no response")
 		})
 
 		t.Run("malformed response", func(t *testing.T) {
-			driver.setProvider(fixtures.BadOAuthProvider{MalformedResponse: true, OAuthProvider: fixtures.OAuthProvider{}})
+			driver.SetProvider(fixtures.BadOAuthProvider{MalformedResponse: true, OAuthProvider: fixtures.OAuthProvider{}})
 			_, err := auth.Login(map[string]string{"code": "code", "state": "state"})
 			test.AssertErr(t, err, "malformed response")
 		})
@@ -117,10 +118,10 @@ func TestOAuthWithDefaultProvider(t *testing.T) {
 		test.AssertOK(t, err, "supported login URL")
 
 		t.Run("without provider", func(t *testing.T) {
-			provider := driver.provider
-			defer driver.setProvider(provider)
+			provider := driver.GetProvider()
+			defer driver.SetProvider(provider)
 
-			driver.setProvider(nil)
+			driver.SetProvider(nil)
 
 			_, err := auth.LoginURL("state")
 			test.AssertErr(t, err, "invalid provider")
@@ -136,24 +137,24 @@ func TestOAuthWithDefaultProvider(t *testing.T) {
 }
 
 func TestOAuthWithMockedProvider(t *testing.T) {
-	provider := driver.provider
-	defer driver.setProvider(provider)
+	provider := driver.GetProvider()
+	defer driver.SetProvider(provider)
 
-	driver.setProvider(fixtures.OAuthProvider{
+	driver.SetProvider(fixtures.OAuthProvider{
 		map[string]gate.HasEmail{
-			"code-token": GoogleUser{
+			"code-token": oauth.GoogleUser{
 				Email:         "foo@local",
 				EmailVerified: true,
 			},
-			"code2-token": GoogleUser{
+			"code2-token": oauth.GoogleUser{
 				Email:         "foo@local",
 				EmailVerified: true,
 			},
-			"code3-token": GoogleUser{
+			"code3-token": oauth.GoogleUser{
 				Email:         "bar@local",
 				EmailVerified: false,
 			},
-			"code4-token": GoogleUser{
+			"code4-token": oauth.GoogleUser{
 				Email:         "qux@local",
 				EmailVerified: true,
 			},

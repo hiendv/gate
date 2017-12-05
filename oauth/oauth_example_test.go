@@ -1,4 +1,4 @@
-package oauth
+package oauth_test
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"github.com/hiendv/gate"
 	"github.com/hiendv/gate/dependency"
 	"github.com/hiendv/gate/internal/test/fixtures"
-	// "github.com/pkg/errors"
+	"github.com/hiendv/gate/oauth"
 )
 
 func Example() {
@@ -60,21 +60,21 @@ func Example() {
 	userService := fixtures.NewMyUserService(users)
 	tokenService := fixtures.NewMyTokenService(nil)
 
-	driver = New(
-		NewGoogleConfig(
+	driver = oauth.New(
+		oauth.NewGoogleConfig(
 			gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 			"google-client-id",
 			"google-client-secret",
 			"http://localhost:8080",
 		),
-		GoogleStatelessHandler,
+		oauth.GoogleStatelessHandler,
 		dependency.NewContainer(userService, tokenService, roleService),
 	)
 
 	// Mocking
-	driver.setProvider(fixtures.OAuthProvider{
+	driver.SetProvider(fixtures.OAuthProvider{
 		map[string]gate.HasEmail{
-			"code-token": GoogleUser{
+			"code-token": oauth.GoogleUser{
 				Email:         "foo@local",
 				EmailVerified: true,
 			},
@@ -151,30 +151,30 @@ func ExampleDriver_Login() {
 
 	userService := fixtures.NewMyUserService(users)
 
-	driver = New(
-		NewGoogleConfig(
+	driver = oauth.New(
+		oauth.NewGoogleConfig(
 			gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
 			"google-client-id",
 			"google-client-secret",
 			"http://localhost:8080",
 		),
-		GoogleStatelessHandler,
+		oauth.GoogleStatelessHandler,
 		// Token and Role services are omitted
 		dependency.NewContainer(userService, nil, nil),
 	)
 
 	// Mocking
-	driver.setProvider(fixtures.OAuthProvider{
+	driver.SetProvider(fixtures.OAuthProvider{
 		map[string]gate.HasEmail{
-			"code-token": GoogleUser{
+			"code-token": oauth.GoogleUser{
 				Email:         "foo@local",
 				EmailVerified: true,
 			},
-			"code2-token": GoogleUser{
+			"code2-token": oauth.GoogleUser{
 				Email:         "foo@local",
 				EmailVerified: true,
 			},
-			"code3-token": GoogleUser{
+			"code3-token": oauth.GoogleUser{
 				Email:         "bar@local",
 				EmailVerified: true,
 			},
@@ -230,23 +230,24 @@ func ExampleDriver_IssueJWT() {
 
 	userService := fixtures.NewMyUserService(users)
 	tokenService := fixtures.NewMyTokenService(nil)
+	config := oauth.NewGoogleConfig(
+		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
+		"google-client-id",
+		"google-client-secret",
+		"http://localhost:8080",
+	)
 
-	driver = New(
-		NewGoogleConfig(
-			gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
-			"google-client-id",
-			"google-client-secret",
-			"http://localhost:8080",
-		),
-		GoogleStatelessHandler,
+	driver = oauth.New(
+		config,
+		oauth.GoogleStatelessHandler,
 		// Role service is omitted
 		dependency.NewContainer(userService, tokenService, nil),
 	)
 
 	// Mocking
-	driver.setProvider(fixtures.OAuthProvider{
+	driver.SetProvider(fixtures.OAuthProvider{
 		map[string]gate.HasEmail{
-			"code-token": GoogleUser{
+			"code-token": oauth.GoogleUser{
 				Email:         "foo@local",
 				EmailVerified: true,
 			},
@@ -259,7 +260,7 @@ func ExampleDriver_IssueJWT() {
 		return
 	}
 
-	jwtConfig, err := gate.NewHMACJWTConfig("HS256", driver.config.JWTSigningKey(), driver.config.JWTExpiration(), driver.config.JWTSkipClaimsValidation())
+	jwtConfig, err := gate.NewHMACJWTConfig("HS256", config.JWTSigningKey(), config.JWTExpiration(), config.JWTSkipClaimsValidation())
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -304,14 +305,14 @@ func ExampleDriver_Authenticate() {
 	userService := fixtures.NewMyUserService(users)
 	tokenService := fixtures.NewMyTokenService(nil)
 
-	auth := New(
-		NewGoogleConfig(
+	auth := oauth.New(
+		oauth.NewGoogleConfig(
 			gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, true),
 			"google-client-id",
 			"google-client-secret",
 			"http://localhost:8080",
 		),
-		GoogleStatelessHandler,
+		oauth.GoogleStatelessHandler,
 		// Role service is omitted
 		dependency.NewContainer(userService, tokenService, nil),
 	)

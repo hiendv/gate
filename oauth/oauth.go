@@ -58,7 +58,7 @@ func New(config Config, handler LoginFunc, container dependency.Container) *Driv
 	var driver = &Driver{}
 
 	driver.config = config
-	driver.setProvider(DefaultProvider{
+	driver.SetProvider(DefaultProvider{
 		&oauth2.Config{
 			ClientID:     config.ClientID,
 			ClientSecret: config.ClientSecret,
@@ -85,7 +85,13 @@ func New(config Config, handler LoginFunc, container dependency.Container) *Driv
 	return driver
 }
 
-func (auth *Driver) setProvider(provider Provider) {
+// GetProvider is the getter for OAuth provider
+func (auth Driver) GetProvider() Provider {
+	return auth.provider
+}
+
+// SetProvider is the setter for OAuth provider
+func (auth *Driver) SetProvider(provider Provider) {
 	auth.provider = provider
 }
 
