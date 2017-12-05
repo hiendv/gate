@@ -46,6 +46,7 @@ func TestMain(m *testing.M) {
 	users := []fixtures.User{
 		{
 			ID:    fixtures.RandomString(8),
+			Name:  "foo",
 			Email: "foo@local",
 			Roles: []string{
 				roles[0].ID,
@@ -54,18 +55,14 @@ func TestMain(m *testing.M) {
 		},
 		{
 			ID:    fixtures.RandomString(8),
-			Email: "bar@local",
-			Roles: []string{},
-		},
-		{
-			ID:    fixtures.RandomString(8),
+			Name:  "nobody",
 			Email: "nobody@local",
 			Roles: []string{},
 		},
 	}
 
 	roleService = fixtures.NewMyRoleService(roles)
-	userService = fixtures.NewMyUserService(users)
+	userService = fixtures.NewMyUserService(users, []string{"local", "facebook"})
 	tokenService = fixtures.NewMyTokenService(nil)
 
 	driver = oauth.New(
@@ -75,7 +72,7 @@ func TestMain(m *testing.M) {
 			"client-secret",
 			"http://localhost:8080",
 		),
-		oauth.GoogleStatelessHandler,
+		oauth.StatelessHandler,
 		dependency.NewContainer(userService, tokenService, roleService),
 	)
 
@@ -137,55 +134,139 @@ func TestOAuthWithDefaultProvider(t *testing.T) {
 }
 
 func TestOAuthWithMockedProvider(t *testing.T) {
-	provider := driver.GetProvider()
-	defer driver.SetProvider(provider)
+	t.Run("google", func(t *testing.T) {
+		provider := driver.GetProvider()
+		defer driver.SetProvider(provider)
 
-	driver.SetProvider(fixtures.OAuthProvider{
-		map[string]gate.HasEmail{
-			"code-token": oauth.GoogleUser{
-				Email:         "foo@local",
-				EmailVerified: true,
+		driver.SetProvider(fixtures.OAuthProvider{
+			map[string]gate.Account{
+				"code-token": oauth.GoogleUser{
+					Email:         "foo@local",
+					Name:          "foo",
+					EmailVerified: true,
+				},
+				"code2-token": oauth.GoogleUser{
+					Email:         "foo@local",
+					Name:          "foo",
+					EmailVerified: true,
+				},
+				"code3-token": oauth.GoogleUser{
+					Email:         "bar@local",
+					EmailVerified: false,
+				},
+				"code4-token": oauth.GoogleUser{
+					Email:         "qux@external",
+					EmailVerified: true,
+				},
+				"code5-token": oauth.GoogleUser{
+					Email:         fixtures.EmailTriggeringDatabaseError,
+					EmailVerified: true,
+				},
+				"code6-token": oauth.GoogleUser{
+					Email:         "new@local",
+					Name:          "new",
+					EmailVerified: true,
+				},
 			},
-			"code2-token": oauth.GoogleUser{
-				Email:         "foo@local",
-				EmailVerified: true,
-			},
-			"code3-token": oauth.GoogleUser{
-				Email:         "bar@local",
-				EmailVerified: false,
-			},
-			"code4-token": oauth.GoogleUser{
-				Email:         "qux@local",
-				EmailVerified: true,
-			},
-		},
-	})
-
-	t.Run("login", func(t *testing.T) {
-		t.Run("valid credentials", func(t *testing.T) {
-			firstUser, err := auth.Login(map[string]string{"code": "code", "state": "state"})
-			test.AssertOK(t, err, "valid credentials")
-
-			secondUser, err := auth.Login(map[string]string{"code": "code2", "state": "state"})
-			test.AssertOK(t, err, "valid credentials")
-
-			if firstUser.GetID() != secondUser.GetID() {
-				t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
-			}
-
-			_, err = auth.Login(map[string]string{"code": "code3"})
-			test.AssertErr(t, err, "unverified email")
-
-			_, err = auth.Login(map[string]string{"code": "code4"})
-			test.AssertErr(t, err, "non-existing user")
 		})
 
-		t.Run("invalid credentials", func(t *testing.T) {
-			_, err := auth.Login(map[string]string{"state": "barr"})
-			test.AssertErr(t, err, "missing code")
+		t.Run("login", func(t *testing.T) {
+			t.Run("valid credentials", func(t *testing.T) {
+				firstUser, err := auth.Login(map[string]string{"code": "code", "state": "state"})
+				test.AssertOK(t, err, "valid credentials")
 
-			_, err = auth.Login(map[string]string{"code": "", "state": ""})
-			test.AssertErr(t, err, "invalid credentials")
+				secondUser, err := auth.Login(map[string]string{"code": "code2", "state": "state"})
+				test.AssertOK(t, err, "valid credentials")
+
+				if firstUser.GetID() != secondUser.GetID() {
+					t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
+				}
+
+				_, err = auth.Login(map[string]string{"code": "code3"})
+				test.AssertErr(t, err, "unverified email")
+
+				_, err = auth.Login(map[string]string{"code": "code4"})
+				test.AssertErr(t, err, "forbidden email domain")
+
+				_, err = auth.Login(map[string]string{"code": "code5"})
+				test.AssertErr(t, err, "database error")
+
+				_, err = auth.Login(map[string]string{"code": "code6", "state": "state"})
+				test.AssertOK(t, err, "valid credentials")
+			})
+
+			t.Run("invalid credentials", func(t *testing.T) {
+				_, err := auth.Login(map[string]string{"state": "barr"})
+				test.AssertErr(t, err, "missing code")
+
+				_, err = auth.Login(map[string]string{"code": "", "state": ""})
+				test.AssertErr(t, err, "invalid credentials")
+			})
+		})
+	})
+
+	t.Run("facebook", func(t *testing.T) {
+		facebookDriver := oauth.New(
+			oauth.NewFacebookConfig(
+				gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
+				"client-id",
+				"client-secret",
+				"http://localhost:8080",
+			),
+			oauth.StatelessHandler,
+			dependency.NewContainer(userService, tokenService, roleService),
+		)
+
+		provider := facebookDriver.GetProvider()
+		defer facebookDriver.SetProvider(provider)
+
+		facebookDriver.SetProvider(fixtures.OAuthProvider{
+			map[string]gate.Account{
+				"code-token": oauth.FacebookUser{
+					Email:         "foo@facebook",
+					Name:          "foo",
+					EmailVerified: true,
+				},
+				"code2-token": oauth.FacebookUser{
+					Email:         "foo@facebook",
+					Name:          "foo",
+					EmailVerified: true,
+				},
+				"code3-token": oauth.FacebookUser{
+					Email:         "bar@facebook",
+					EmailVerified: false,
+				},
+			},
+		})
+
+		auth = facebookDriver
+		defer func() {
+			auth = driver
+		}()
+
+		t.Run("login", func(t *testing.T) {
+			t.Run("valid credentials", func(t *testing.T) {
+				firstUser, err := auth.Login(map[string]string{"code": "code", "state": "state"})
+				test.AssertOK(t, err, "valid credentials")
+
+				secondUser, err := auth.Login(map[string]string{"code": "code2", "state": "state"})
+				test.AssertOK(t, err, "valid credentials")
+
+				if firstUser.GetID() != secondUser.GetID() {
+					t.Errorf("ids should be equal: %v - %v", firstUser.GetID(), secondUser.GetID())
+				}
+
+				_, err = auth.Login(map[string]string{"code": "code3"})
+				test.AssertErr(t, err, "unverified email")
+			})
+
+			t.Run("invalid credentials", func(t *testing.T) {
+				_, err := auth.Login(map[string]string{"state": "barr"})
+				test.AssertErr(t, err, "missing code")
+
+				_, err = auth.Login(map[string]string{"code": "", "state": ""})
+				test.AssertErr(t, err, "invalid credentials")
+			})
 		})
 	})
 }

@@ -57,7 +57,7 @@ func Example() {
 	}
 
 	roleService := fixtures.NewMyRoleService(roles)
-	userService := fixtures.NewMyUserService(users)
+	userService := fixtures.NewMyUserService(users, []string{"local"})
 	tokenService := fixtures.NewMyTokenService(nil)
 
 	driver = oauth.New(
@@ -67,13 +67,13 @@ func Example() {
 			"google-client-secret",
 			"http://localhost:8080",
 		),
-		oauth.GoogleStatelessHandler,
+		oauth.StatelessHandler,
 		dependency.NewContainer(userService, tokenService, roleService),
 	)
 
 	// Mocking
 	driver.SetProvider(fixtures.OAuthProvider{
-		map[string]gate.HasEmail{
+		map[string]gate.Account{
 			"code-token": oauth.GoogleUser{
 				Email:         "foo@local",
 				EmailVerified: true,
@@ -149,7 +149,7 @@ func ExampleDriver_Login() {
 		},
 	}
 
-	userService := fixtures.NewMyUserService(users)
+	userService := fixtures.NewMyUserService(users, []string{"local"})
 
 	driver = oauth.New(
 		oauth.NewGoogleConfig(
@@ -158,14 +158,14 @@ func ExampleDriver_Login() {
 			"google-client-secret",
 			"http://localhost:8080",
 		),
-		oauth.GoogleStatelessHandler,
+		oauth.StatelessHandler,
 		// Token and Role services are omitted
 		dependency.NewContainer(userService, nil, nil),
 	)
 
 	// Mocking
 	driver.SetProvider(fixtures.OAuthProvider{
-		map[string]gate.HasEmail{
+		map[string]gate.Account{
 			"code-token": oauth.GoogleUser{
 				Email:         "foo@local",
 				EmailVerified: true,
@@ -228,7 +228,7 @@ func ExampleDriver_IssueJWT() {
 		},
 	}
 
-	userService := fixtures.NewMyUserService(users)
+	userService := fixtures.NewMyUserService(users, []string{"local"})
 	tokenService := fixtures.NewMyTokenService(nil)
 	config := oauth.NewGoogleConfig(
 		gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
@@ -239,14 +239,14 @@ func ExampleDriver_IssueJWT() {
 
 	driver = oauth.New(
 		config,
-		oauth.GoogleStatelessHandler,
+		oauth.StatelessHandler,
 		// Role service is omitted
 		dependency.NewContainer(userService, tokenService, nil),
 	)
 
 	// Mocking
 	driver.SetProvider(fixtures.OAuthProvider{
-		map[string]gate.HasEmail{
+		map[string]gate.Account{
 			"code-token": oauth.GoogleUser{
 				Email:         "foo@local",
 				EmailVerified: true,
@@ -302,7 +302,7 @@ func ExampleDriver_Authenticate() {
 		},
 	}
 
-	userService := fixtures.NewMyUserService(users)
+	userService := fixtures.NewMyUserService(users, []string{"local"})
 	tokenService := fixtures.NewMyTokenService(nil)
 
 	auth := oauth.New(
@@ -312,7 +312,7 @@ func ExampleDriver_Authenticate() {
 			"google-client-secret",
 			"http://localhost:8080",
 		),
-		oauth.GoogleStatelessHandler,
+		oauth.StatelessHandler,
 		// Role service is omitted
 		dependency.NewContainer(userService, tokenService, nil),
 	)

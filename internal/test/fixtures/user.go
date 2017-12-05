@@ -1,15 +1,21 @@
 package fixtures
 
 import (
+	"strings"
+
 	"github.com/hiendv/gate"
 	"github.com/pkg/errors"
 )
+
+// EmailTriggeringDatabaseError should trigger database error
+const EmailTriggeringDatabaseError string = "error@local"
 
 var errUserNotFound = errors.New("user not found")
 
 // User is my user
 type User struct {
 	ID    string
+	Name  string
 	Email string
 	Roles []string
 }
@@ -17,6 +23,11 @@ type User struct {
 // GetID returns user ID
 func (u User) GetID() string {
 	return u.ID
+}
+
+// GetName returns user Name
+func (u User) GetName() string {
+	return u.Name
 }
 
 // GetEmail returns user Email
@@ -32,13 +43,15 @@ func (u User) GetRoles() []string {
 // MyUserService is my user service
 type MyUserService struct {
 	records          []User
+	domains          []string
 	GenerateMyUserID func() string
 }
 
 // NewMyUserService is the constructor for MyUserService
-func NewMyUserService(records []User) *MyUserService {
+func NewMyUserService(records []User, domains []string) *MyUserService {
 	return &MyUserService{
 		records,
+		domains,
 		func() string {
 			return RandomString(8)
 		},
@@ -60,6 +73,11 @@ func (service MyUserService) FindOneByID(ID string) (u gate.User, err error) {
 
 // FindOneByEmail fetches the user with the given email
 func (service MyUserService) FindOneByEmail(email string) (u gate.User, err error) {
+	if email == EmailTriggeringDatabaseError {
+		err = errors.New("database error")
+		return
+	}
+
 	for _, record := range service.records {
 		if record.Email == email {
 			u = record
@@ -71,10 +89,23 @@ func (service MyUserService) FindOneByEmail(email string) (u gate.User, err erro
 	return
 }
 
-// CreateOneByEmail creates the user with the given email
-func (service *MyUserService) CreateOneByEmail(email string) (u gate.User, err error) {
+// CreateOneByAccount creates the user with the given email
+func (service *MyUserService) CreateOneByAccount(account gate.Account) (u gate.User, err error) {
+	email := account.GetEmail()
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		err = errors.New("invalid email")
+		return
+	}
+
+	if !service.isDomainAllowed(parts[1]) {
+		err = errors.New("forbidden email")
+		return
+	}
+
 	record := User{
 		ID:    service.GenerateMyUserID(),
+		Name:  account.GetName(),
 		Email: email,
 	}
 	service.records = append(service.records, record)
@@ -82,18 +113,17 @@ func (service *MyUserService) CreateOneByEmail(email string) (u gate.User, err e
 	return
 }
 
-// FindOrCreateOneByEmail fetches the user with the given email or creates a new one if the user doesn't exist
-func (service *MyUserService) FindOrCreateOneByEmail(email string) (u gate.User, err error) {
-	u, err = service.FindOneByEmail(email)
-	if err == nil {
-		return
+// IsErrNotFound determines whether the error is not found error or not
+func (service *MyUserService) IsErrNotFound(err error) bool {
+	return err == errUserNotFound
+}
+
+func (service *MyUserService) isDomainAllowed(domain string) bool {
+	for _, d := range service.domains {
+		if d == domain {
+			return true
+		}
 	}
 
-	if err != errUserNotFound {
-		err = errors.New("something wrong")
-		return
-	}
-
-	u, err = service.CreateOneByEmail(email)
-	return
+	return false
 }

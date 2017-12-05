@@ -21,20 +21,20 @@ func TestPasswordInvalidConfig(t *testing.T) {
 	)
 
 	if instance != nil {
-		t.Fatal("unexpected nil driver")
+		t.Fatal("unexpected non-nil driver")
 	}
 }
 
 func TestPasswordInvalidHandler(t *testing.T) {
 	instance := password.New(
-		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 		nil,
 		// Services are omitted
 		dependency.NewContainer(nil, nil, nil),
 	)
 
 	if instance != nil {
-		t.Fatal("unexpected nil driver")
+		t.Fatal("unexpected non-nil driver")
 	}
 }
 
@@ -42,8 +42,8 @@ func TestPasswordLoginFunc(t *testing.T) {
 	account := fixtures.Account{Email: "email@local", Password: "password"}
 
 	driver := password.New(
-		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(driver password.Driver, email, password string) (gate.HasEmail, error) {
+		password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		func(driver password.Driver, email, password string) (gate.Account, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}
@@ -51,10 +51,10 @@ func TestPasswordLoginFunc(t *testing.T) {
 			return nil, errors.New("invalid credentials")
 		},
 		// Token and Role services are omitted
-		dependency.NewContainer(fixtures.NewMyUserService(nil), nil, nil),
+		dependency.NewContainer(fixtures.NewMyUserService(nil, []string{"local"}), nil, nil),
 	)
 	if driver == nil {
-		t.Fatal("unexpected non-nil driver")
+		t.Fatal("unexpected nil driver")
 	}
 
 	t.Run("valid", func(t *testing.T) {
@@ -71,13 +71,13 @@ func TestPasswordLoginFunc(t *testing.T) {
 func TestPasswordUserService(t *testing.T) {
 	t.Run("with invalid user service", func(t *testing.T) {
 		driver := password.New(
-			password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+			password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 			password.LoginFuncStub,
 			// Role service is omitted
 			dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), nil),
 		)
 		if driver == nil {
-			t.Fatal("unexpected non-nil driver")
+			t.Fatal("unexpected nil driver")
 		}
 
 		t.Run("get user from jwt", func(t *testing.T) {
@@ -107,7 +107,7 @@ func TestPasswordUserService(t *testing.T) {
 
 func TestPasswordJWTService(t *testing.T) {
 	driver := password.New(
-		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 		password.LoginFuncStub,
 		// User service is omitted
 		dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), fixtures.NewMyRoleService(nil)),
@@ -155,7 +155,7 @@ func TestPasswordJWTService(t *testing.T) {
 
 		t.Run("with invalid token service", func(t *testing.T) {
 			driverWithInvalidTokenService := password.New(
-				password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+				password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 				password.LoginFuncStub,
 				// User and Role services are omitted
 				dependency.NewContainer(nil, nil, nil),
@@ -201,7 +201,7 @@ func TestPasswordRoleService(t *testing.T) {
 	t.Run("get user abilities", func(t *testing.T) {
 		t.Run("with invalid role service", func(t *testing.T) {
 			driver := password.New(
-				password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+				password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 				password.LoginFuncStub,
 				// User and Token services are omitted
 				dependency.NewContainer(nil, nil, nil),
@@ -216,7 +216,7 @@ func TestPasswordRoleService(t *testing.T) {
 
 		t.Run("with valid role service", func(t *testing.T) {
 			driver := password.New(
-				password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+				password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
 				password.LoginFuncStub,
 				// User and Token services are omitted
 				dependency.NewContainer(nil, nil, fixtures.NewMyRoleService(nil)),

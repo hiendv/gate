@@ -23,7 +23,7 @@ const malformedResponseKey contextKey = "malformed-response"
 type OAuthClient struct {
 	ctx       context.Context
 	token     *oauth2.Token
-	responses map[string]gate.HasEmail
+	responses map[string]gate.Account
 }
 
 // Get makes a GET request with the given URL
@@ -57,7 +57,7 @@ func (client OAuthClient) Get(url string) (resp *http.Response, err error) {
 
 // OAuthProvider is the mocking provider for OAuth driver
 type OAuthProvider struct {
-	Responses map[string]gate.HasEmail
+	Responses map[string]gate.Account
 }
 
 // AuthCodeURL returns a URL to OAuth 2.0 provider's consent page

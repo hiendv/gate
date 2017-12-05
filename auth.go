@@ -28,8 +28,9 @@ type Auth interface {
 // UserService is the contract which offers queries on the user entity
 type UserService interface {
 	FindOneByID(string) (User, error)
-	FindOrCreateOneByEmail(string) (User, error)
 	FindOneByEmail(string) (User, error)
+	CreateOneByAccount(Account) (User, error)
+	IsErrNotFound(error) bool
 }
 
 // RoleService is the contract which offers queries on the role entity
@@ -43,7 +44,8 @@ type TokenService interface {
 	Store(JWT) error
 }
 
-// HasEmail is the contract for user service entity
-type HasEmail interface {
+// Account is the contract for account
+type Account interface {
+	GetName() string
 	GetEmail() string
 }

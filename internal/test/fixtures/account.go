@@ -2,9 +2,15 @@ package fixtures
 
 // Account contains login credentials
 type Account struct {
+	Name       string
 	Email      string
 	Password   string
 	EmptyEmail bool
+}
+
+// GetName returns the account's name
+func (record Account) GetName() string {
+	return record.Name
 }
 
 // GetEmail returns the account's email

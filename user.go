@@ -3,6 +3,7 @@ package gate
 // User is the contract for the user entity
 type User interface {
 	GetID() string
+	GetName() string
 	GetEmail() string
 	GetRoles() []string
 }

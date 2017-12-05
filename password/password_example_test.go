@@ -14,13 +14,16 @@ import (
 func Example() {
 	var auth gate.Auth
 
-	userService := fixtures.NewMyUserService([]fixtures.User{
-		{
-			ID:    "id",
-			Email: "email@local",
-			Roles: []string{"role-id"},
+	userService := fixtures.NewMyUserService(
+		[]fixtures.User{
+			{
+				ID:    "id",
+				Email: "email@local",
+				Roles: []string{"role-id"},
+			},
 		},
-	})
+		[]string{"local"},
+	)
 	tokenService := fixtures.NewMyTokenService(nil)
 	roleService := fixtures.NewMyRoleService([]fixtures.Role{
 		{
@@ -35,8 +38,8 @@ func Example() {
 	account := fixtures.Account{Email: "email@local", Password: "password"}
 
 	auth = password.New(
-		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(driver password.Driver, email, password string) (gate.HasEmail, error) {
+		password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		func(driver password.Driver, email, password string) (gate.Account, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}
@@ -98,20 +101,23 @@ func Example() {
 
 func ExampleDriver_Login() {
 
-	userService := fixtures.NewMyUserService([]fixtures.User{
-		{
-			ID:    "id",
-			Email: "email@local",
-			Roles: []string{"role-id"},
+	userService := fixtures.NewMyUserService(
+		[]fixtures.User{
+			{
+				ID:    "id",
+				Email: "email@local",
+				Roles: []string{"role-id"},
+			},
 		},
-	})
+		[]string{"local"},
+	)
 
 	account := fixtures.Account{Email: "email@local", Password: "password"}
 	anotherAccount := fixtures.Account{Email: "email2@local", Password: "password2"}
 
 	auth := password.New(
-		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(driver password.Driver, email, password string) (gate.HasEmail, error) {
+		password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		func(driver password.Driver, email, password string) (gate.Account, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}
@@ -156,20 +162,23 @@ func ExampleDriver_Login() {
 }
 
 func ExampleDriver_IssueJWT() {
-	userService := fixtures.NewMyUserService([]fixtures.User{
-		{
-			ID:    "id",
-			Email: "email@local",
-			Roles: []string{"role"},
+	userService := fixtures.NewMyUserService(
+		[]fixtures.User{
+			{
+				ID:    "id",
+				Email: "email@local",
+				Roles: []string{"role"},
+			},
 		},
-	})
+		[]string{"local"},
+	)
 	tokenService := fixtures.NewMyTokenService(nil)
 	account := fixtures.Account{Email: "email@local", Password: "password"}
-	config := password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)}
+	config := password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)}
 
 	auth := password.New(
 		config,
-		func(driver password.Driver, email, password string) (gate.HasEmail, error) {
+		func(driver password.Driver, email, password string) (gate.Account, error) {
 			if account.Valid(email, password) {
 				return account, nil
 			}
@@ -218,17 +227,20 @@ func ExampleDriver_IssueJWT() {
 }
 
 func ExampleDriver_Authenticate() {
-	userService := fixtures.NewMyUserService([]fixtures.User{
-		{
-			ID:    "id",
-			Email: "email@local",
-			Roles: []string{},
+	userService := fixtures.NewMyUserService(
+		[]fixtures.User{
+			{
+				ID:    "id",
+				Email: "email@local",
+				Roles: []string{},
+			},
 		},
-	})
+		[]string{"local"},
+	)
 	tokenService := fixtures.NewMyTokenService(nil)
 
 	auth := password.New(
-		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, true)},
+		password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, true)},
 		password.LoginFuncStub,
 		// Role service is omitted
 		dependency.NewContainer(userService, tokenService, nil),

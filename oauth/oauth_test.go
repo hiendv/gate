@@ -9,13 +9,12 @@ import (
 	"github.com/hiendv/gate/internal/test"
 	"github.com/hiendv/gate/internal/test/fixtures"
 	"github.com/hiendv/gate/oauth"
-	"github.com/pkg/errors"
 )
 
 func TestOAuthInvalidConfig(t *testing.T) {
 	instance := oauth.New(
 		oauth.Config{},
-		oauth.LoginFuncStub,
+		oauth.HandlerStub,
 		// Services are omitted
 		dependency.NewContainer(nil, nil, nil),
 	)
@@ -39,11 +38,29 @@ func TestOAuthInvalidHandler(t *testing.T) {
 	)
 
 	if instance != nil {
-		t.Fatal("unexpected nil driver")
+		t.Fatal("unexpected non-nil driver")
 	}
 }
 
 func TestOAuthLoginFunc(t *testing.T) {
+	instance := oauth.New(
+		oauth.NewGoogleConfig(
+			gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
+			"client-id",
+			"client-secret",
+			"http://localhost:8080",
+		),
+		func(user gate.Account) oauth.LoginFunc {
+			return nil
+		},
+		// Services are omitted
+		dependency.NewContainer(nil, nil, nil),
+	)
+
+	if instance != nil {
+		t.Fatal("unexpected non-nil driver")
+	}
+
 	driver := oauth.New(
 		oauth.NewGoogleConfig(
 			gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false),
@@ -51,13 +68,7 @@ func TestOAuthLoginFunc(t *testing.T) {
 			"client-secret",
 			"http://localhost:8080",
 		),
-		func(driver oauth.Driver, code, state string) (gate.HasEmail, error) {
-			if code == "code" && state == "state" {
-				return oauth.GoogleUser{Email: "email@gmail.com", EmailVerified: true}, nil
-			}
-
-			return nil, errors.New("invalid credentials")
-		},
+		fixtures.CodeAndStateOAuthHandler,
 		// Token and Role services are omitted
 		dependency.NewContainer(fixtures.NewMyUserService(
 			[]fixtures.User{
@@ -67,10 +78,11 @@ func TestOAuthLoginFunc(t *testing.T) {
 					Roles: []string{},
 				},
 			},
+			[]string{"local", "gmail.com"},
 		), nil, nil),
 	)
 	if driver == nil {
-		t.Fatal("unexpected non-nil driver")
+		t.Fatal("unexpected nil driver")
 	}
 
 	t.Run("valid", func(t *testing.T) {
@@ -93,12 +105,12 @@ func TestOAuthUserService(t *testing.T) {
 				"client-secret",
 				"http://localhost:8080",
 			),
-			oauth.LoginFuncStub,
+			oauth.HandlerStub,
 			// Role service is omitted
 			dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), nil),
 		)
 		if driver == nil {
-			t.Fatal("unexpected non-nil driver")
+			t.Fatal("unexpected nil driver")
 		}
 
 		t.Run("get user from jwt", func(t *testing.T) {
@@ -134,7 +146,7 @@ func TestPasswordJWTService(t *testing.T) {
 			"client-secret",
 			"http://localhost:8080",
 		),
-		oauth.LoginFuncStub,
+		oauth.HandlerStub,
 		// User service is omitted
 		dependency.NewContainer(nil, fixtures.NewMyTokenService(nil), fixtures.NewMyRoleService(nil)),
 	)
@@ -187,7 +199,7 @@ func TestPasswordJWTService(t *testing.T) {
 					"client-secret",
 					"http://localhost:8080",
 				),
-				oauth.LoginFuncStub,
+				oauth.HandlerStub,
 				// User and Role services are omitted
 				dependency.NewContainer(nil, nil, nil),
 			)
@@ -238,7 +250,7 @@ func TestOAuthRoleService(t *testing.T) {
 					"client-secret",
 					"http://localhost:8080",
 				),
-				oauth.LoginFuncStub,
+				oauth.HandlerStub,
 				// User and Token services are omitted
 				dependency.NewContainer(nil, nil, nil),
 			)
@@ -258,7 +270,7 @@ func TestOAuthRoleService(t *testing.T) {
 					"client-secret",
 					"http://localhost:8080",
 				),
-				oauth.LoginFuncStub,
+				oauth.HandlerStub,
 				// User and Token services are omitted
 				dependency.NewContainer(nil, nil, fixtures.NewMyRoleService(nil)),
 			)

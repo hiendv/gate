@@ -11,7 +11,7 @@ import (
 )
 
 // LoginFunc is the handler of OAuth authentication
-type LoginFunc func(driver Driver, code, state string) (gate.HasEmail, error)
+type LoginFunc func(driver Driver, code, state string) (gate.Account, error)
 
 // Driver is OAuth authentication
 type Driver struct {
@@ -48,13 +48,8 @@ func (provider DefaultProvider) Client(ctx context.Context, t *oauth2.Token) int
 	return provider.config.Client(ctx, t)
 }
 
-// LoginFuncStub is the stub for LoginFunc
-var LoginFuncStub LoginFunc = func(Driver, string, string) (gate.HasEmail, error) {
-	return nil, nil
-}
-
 // New is the constructor for Driver
-func New(config Config, handler LoginFunc, container dependency.Container) *Driver {
+func New(config Config, handler Handler, container dependency.Container) *Driver {
 	var driver = &Driver{}
 
 	driver.config = config
@@ -71,7 +66,10 @@ func New(config Config, handler LoginFunc, container dependency.Container) *Driv
 	if handler == nil {
 		return nil
 	}
-	driver.handler = handler
+	driver.handler = handler(config.Account)
+	if driver.handler == nil {
+		return nil
+	}
 
 	jwtConfig, err := gate.NewHMACJWTConfig("HS256", config.JWTSigningKey(), config.JWTExpiration(), config.JWTSkipClaimsValidation())
 	if err != nil {
@@ -125,13 +123,22 @@ func (auth Driver) Login(credentials map[string]string) (user gate.User, err err
 		return
 	}
 
-	identifier := person.GetEmail()
-	if identifier == "" {
-		err = errors.New("invalid user identifier (email)")
+	if person.GetEmail() == "" {
+		err = errors.New("missing account email")
 		return
 	}
 
-	user, err = service.FindOneByEmail(identifier)
+	user, err = service.FindOneByEmail(person.GetEmail())
+	if err == nil {
+		return
+	}
+
+	if !service.IsErrNotFound(err) {
+		err = errors.Wrap(err, "could not find the user")
+		return
+	}
+
+	user, err = service.CreateOneByAccount(person)
 	return
 }
 

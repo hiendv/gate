@@ -63,15 +63,16 @@ func TestMain(m *testing.M) {
 		{Email: "foo@local", Password: "fooo"},
 		{Email: "bar@local", Password: "barr"},
 		{Email: "empty@local", Password: "empty", EmptyEmail: true},
+		{Email: "error@local", Password: "empty"},
 	}
 
 	roleService = fixtures.NewMyRoleService(roles)
-	userService = fixtures.NewMyUserService(users)
+	userService = fixtures.NewMyUserService(users, []string{"local"})
 	tokenService = fixtures.NewMyTokenService(nil)
 
 	auth = password.New(
-		password.Config{gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
-		func(driver password.Driver, email, password string) (gate.HasEmail, error) {
+		password.Config{Config: gate.NewConfig("jwt-secret", "jwt-secret", time.Hour*1, false)},
+		func(driver password.Driver, email, password string) (gate.Account, error) {
 			for _, record := range accounts {
 				if record.Valid(email, password) {
 					return record, nil
@@ -129,6 +130,11 @@ func TestPasswordLogin(t *testing.T) {
 		t.Run("empty email", func(t *testing.T) {
 			_, err := auth.Login(map[string]string{"email": "empty@local", "password": "empty"})
 			test.AssertErr(t, err, "empty email")
+		})
+
+		t.Run("database error", func(t *testing.T) {
+			_, err := auth.Login(map[string]string{"email": fixtures.EmailTriggeringDatabaseError, "password": "empty"})
+			test.AssertErr(t, err, "database error")
 		})
 	})
 	t.Run("invalid account", func(t *testing.T) {
