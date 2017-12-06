@@ -223,6 +223,7 @@ func ExampleDriver_IssueJWT() {
 	users := []fixtures.User{
 		{
 			ID:    "id",
+			Name:  "foo",
 			Email: "foo@local",
 			Roles: []string{},
 		},
@@ -290,7 +291,7 @@ func ExampleDriver_IssueJWT() {
 
 	fmt.Printf("%s:%s@%s - %v", jwt.ID, jwt.Value, jwt.UserID, err)
 
-	// Output: claims-id:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImZvb0Bsb2NhbCIsInJvbGVzIjpbXSwiZXhwIjoxNjA1MDUyODAwLCJqdGkiOiJjbGFpbXMtaWQiLCJpYXQiOjE2MDUwNDkyMDAsInN1YiI6ImlkIn0.W11In6qyrtGdZ_XD3eOJBpd5qwruJE-F3ACstvUcagI@id - <nil>
+	// Output: claims-id:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiZm9vIiwiZW1haWwiOiJmb29AbG9jYWwiLCJyb2xlcyI6W10sImV4cCI6MTYwNTA1MjgwMCwianRpIjoiY2xhaW1zLWlkIiwiaWF0IjoxNjA1MDQ5MjAwLCJzdWIiOiJpZCJ9.vrl-kgbwywz7x25ebq55F9smv20vkO23z-8XaZkWYX0@id - <nil>
 }
 
 func ExampleDriver_Authenticate() {

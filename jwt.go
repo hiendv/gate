@@ -29,6 +29,7 @@ type JWTConfig struct {
 
 // JWTClaims are JWT claims with user's information
 type JWTClaims struct {
+	Name  string   `json:"name"`
 	Email string   `json:"email"`
 	Roles []string `json:"roles"`
 	jwt.StandardClaims
@@ -41,6 +42,16 @@ type JWT struct {
 	UserID    string
 	ExpiredAt time.Time
 	IssuedAt  time.Time
+}
+
+// NewToken constructs a token from JWT claims
+func (service JWTService) NewToken(claims JWTClaims, value string) (token JWT) {
+	token.ID = claims.Id
+	token.UserID = claims.Subject
+	token.ExpiredAt = time.Unix(claims.ExpiresAt, 0)
+	token.IssuedAt = time.Unix(claims.IssuedAt, 0)
+	token.Value = value
+	return
 }
 
 // NewJWTConfig is the constructor for JWTConfig
@@ -79,15 +90,6 @@ func NewJWTService(config JWTConfig) *JWTService {
 	}
 }
 
-// NewTokenFromClaims constructs a token from JWT claims
-func (service JWTService) NewTokenFromClaims(claims JWTClaims) (token JWT) {
-	token.ID = claims.Id
-	token.UserID = claims.Subject
-	token.ExpiredAt = time.Unix(claims.ExpiresAt, 0)
-	token.IssuedAt = time.Unix(claims.IssuedAt, 0)
-	return
-}
-
 // Issue generates a token from JWT claims with the service configuration
 func (service JWTService) Issue(claims JWTClaims) (token JWT, err error) {
 	if service.config.method == nil {
@@ -113,8 +115,7 @@ func (service JWTService) Issue(claims JWTClaims) (token JWT, err error) {
 		return
 	}
 
-	token = service.NewTokenFromClaims(claims)
-	token.Value = str
+	token = service.NewToken(claims, str)
 	return
 }
 
@@ -144,8 +145,7 @@ func (service JWTService) Parse(tokenString string) (token JWT, err error) {
 		return
 	}
 
-	token = service.NewTokenFromClaims(*claims)
-	token.Value = tokenString
+	token = service.NewToken(*claims, tokenString)
 	return
 }
 
@@ -264,6 +264,7 @@ func (service JWTService) getVerifyingKey(token *jwt.Token) (key interface{}, er
 // NewClaims generates JWTClaims for a specific user
 func (service JWTService) NewClaims(user User) JWTClaims {
 	return JWTClaims{
+		Name:  user.GetName(),
 		Email: user.GetEmail(),
 		Roles: user.GetRoles(),
 		StandardClaims: jwt.StandardClaims{
